@@ -1,0 +1,9 @@
+Package: com.themeanest.mfiwrapper
+Name: MFiWrapper
+Depends: mobilesubstrate
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: BTstack based MFi controller wrapper
+Maintainer: meancoot
+Author: meancoot
+Section: Tweaks

@@ -1,0 +1,92 @@
+#include "../HIDManager.h"
+#include "../MFiWrapper.h"
+
+#include "HIDPad.h"
+
+HIDPad::WiiMote::WiiMote(HIDManager::Connection* aConnection) : Interface(aConnection)
+{            
+    memset(&device, 0, sizeof(device));
+
+    device.connection = connection;
+    device.unid = -1;
+    device.state = WIIMOTE_STATE_CONNECTED;
+    device.exp.type = EXP_NONE;
+
+    wiimote_handshake(&device, -1, NULL, -1);
+    
+    FinalizeConnection();
+}            
+
+void HIDPad::WiiMote::SetPlayerIndex(int32_t aIndex)
+{
+    Interface::SetPlayerIndex(aIndex);            
+    device.unid = aIndex;
+    
+    switch (aIndex)
+    {
+        case 0: wiimote_set_leds(&device, WIIMOTE_LED_1); break;
+        case 1: wiimote_set_leds(&device, WIIMOTE_LED_2); break;
+        case 2: wiimote_set_leds(&device, WIIMOTE_LED_3); break;
+        case 3: wiimote_set_leds(&device, WIIMOTE_LED_4); break;                                                     
+    }
+}
+
+void HIDPad::WiiMote::HandlePacket(uint8_t *aData, uint16_t aSize)
+{
+    byte* msg = aData + 2;
+    switch (aData[1])
+    {
+        case WM_RPT_BTN:
+        {
+            wiimote_pressed_buttons(&device, msg);
+            break;
+        }
+
+        case WM_RPT_READ:
+        {
+            wiimote_pressed_buttons(&device, msg);
+            wiimote_handshake(&device, WM_RPT_READ, msg + 5, ((msg[2] & 0xF0) >> 4) + 1);
+            break;
+        }
+
+        case WM_RPT_CTRL_STATUS:
+        {
+            wiimote_pressed_buttons(&device, msg);
+            wiimote_handshake(&device,WM_RPT_CTRL_STATUS,msg,-1);
+            break;
+        }
+
+        case WM_RPT_BTN_EXP:
+        {
+            wiimote_pressed_buttons(&device, msg);
+            wiimote_handle_expansion(&device, msg+2);
+            break;
+        }
+    }
+    
+    ProcessButtons();
+}
+
+void HIDPad::WiiMote::ProcessButtons()
+{
+    if (!stateManager)
+        return;
+
+    static const uint32_t buttonMap[][2] =
+    {
+        { MFi_A, WIIMOTE_BUTTON_ONE },
+        { MFi_B, WIIMOTE_BUTTON_TWO },
+        { MFi_X, WIIMOTE_BUTTON_A },
+        { MFi_Y, WIIMOTE_BUTTON_B },
+        { MFi_LeftShoulder, WIIMOTE_BUTTON_MINUS },
+        { MFi_RightShoulder, WIIMOTE_BUTTON_PLUS },
+        { MFi_Up, WIIMOTE_BUTTON_UP },
+        { MFi_Down, WIIMOTE_BUTTON_DOWN },
+        { MFi_Left, WIIMOTE_BUTTON_LEFT },
+        { MFi_Right, WIIMOTE_BUTTON_RIGHT },
+        { 0xFFFFFFFF, 0xFFFFFFFF }
+    };
+    
+    for (int i = 0; buttonMap[i][0] != 0xFFFFFFFF; i ++)
+        stateManager->SetButton(buttonMap[i][0], (device.btns & buttonMap[i][1]) ? 1.0f : 0.0f);
+}
