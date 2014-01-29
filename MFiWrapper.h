@@ -30,6 +30,8 @@ enum MFiButtons
 
 #ifdef __OBJC__
 
+#include <Foundation/Foundation.h>
+
 #define GCController                GCControllerTweak
 #define GCGamepad                   GCGamepadTweak
 #define GCExtendedGamepad           GCExtendedGamepadTweak
