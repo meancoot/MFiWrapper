@@ -13,9 +13,8 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../HIDManager.h"
-#include "../MFiWrapper.h"
-
+#include "HIDManager.h"
+#include "MFiWrapper.h"
 #include "HIDPad.h"
 
 HIDPad::WiiMote::WiiMote(HIDManager::Connection* aConnection) : Interface(aConnection)

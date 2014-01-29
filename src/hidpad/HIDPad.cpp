@@ -17,9 +17,7 @@
 #include <string.h>
 
 #include "HIDPad.h"
-
-#include "../HIDManager.h"
-#include <stdio.h>
+#include "HIDManager.h"
 
 HIDPad::Interface* HIDPad::Connect(const char* aName, HIDManager::Connection* aConnection)
 {            

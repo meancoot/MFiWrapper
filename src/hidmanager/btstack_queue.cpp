@@ -13,7 +13,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "btpad.h"
+#include "btstack.h"
 
 struct btpad_queue_command
 {

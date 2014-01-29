@@ -20,10 +20,9 @@
 #include <assert.h>
 #include <set>
 
-#include "../HIDManager.h"
-
-#include "../hidpad/HIDPad.h"
-#include "btpad.h"
+#include "HIDManager.h"
+#include "HIDPad.h"
+#include "btstack.h"
 
 namespace HIDManager
 {

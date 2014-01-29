@@ -15,8 +15,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "../HIDManager.h"
-#include "../MFiWrapper.h"
+#include "HIDManager.h"
+#include "MFiWrapper.h"
 
 #include "HIDPad.h"
 

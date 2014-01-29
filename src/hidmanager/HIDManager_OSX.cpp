@@ -21,8 +21,7 @@
 #include <CoreFoundation/CFRunLoop.h>
 #include <IOKit/hid/IOHIDManager.h>
 #include "HIDManager.h"
-#include "hidpad/HIDPad.h"
-
+#include "HIDPad.h"
 
 namespace HIDManager
 {

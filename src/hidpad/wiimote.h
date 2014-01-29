@@ -41,7 +41,7 @@
 #ifndef __WIIMOTE_H__
 #define __WIIMOTE_H__
 
-#include "../HIDManager.h"
+#include "HIDManager.h"
 
    typedef unsigned char byte;
    typedef char sbyte;
