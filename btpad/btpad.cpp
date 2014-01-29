@@ -68,7 +68,7 @@ namespace HIDManager
                 return false;
             else if (aHandle && handle && handle != aHandle)
                 return false;
-            else if (address && hasAddress && (BD_ADDR_CMP(address, aAddress)))
+            else if (aAddress && hasAddress && (BD_ADDR_CMP(address, aAddress)))
                 return false;
             else
                 return true; 
