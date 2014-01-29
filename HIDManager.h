@@ -13,6 +13,8 @@
 // To finalize a disconnection HIDManager should delete the class returned
 // by HIDPad::Connect.
 
+// HIDManager must be thread safe.
+
 namespace HIDManager
 {
     class Connection;
