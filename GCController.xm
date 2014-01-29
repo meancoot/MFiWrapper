@@ -1,36 +1,43 @@
+#include <dispatch/dispatch.h>
 #include "MFiWrapper.h"
 #include "HIDManager.h"
 
+// This array should not be modified on the local thread
 static NSMutableArray* controllers;
-
-static void init_controllers()
-{
-    if (!controllers)
-        controllers = [[NSMutableArray array] retain];
-}
 
 void attach_tweak_controller(HIDPad::Interface* aInterface)
 {
-    init_controllers();
-
-    GCControllerTweak* tweak = [GCControllerTweak controllerForHIDPad:aInterface];
-    [controllers addObject:tweak];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        GCControllerTweak* tweak = [GCControllerTweak controllerForHIDPad:aInterface];
+        [controllers addObject:tweak];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];        
+    });
 }
 
 void detach_tweak_controller(HIDPad::Interface* aInterface)
 {
-    init_controllers();
-
-    for (int i = 0; i != [controllers count]; i ++)
-    {
-        GCControllerTweak* tweak = controllers[i];
-    
-        if (tweak.tweakHIDPad == aInterface)
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        for (int i = 0; i != [controllers count]; i ++)
         {
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:controllers[i]];
-            [controllers removeObjectAtIndex:i];
+            GCController* tweak = controllers[i];
+    
+            if (tweak.tweakHIDPad == aInterface)
+            {
+                [tweak retain];
+                [controllers removeObjectAtIndex:i];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
+                [tweak release];
+            }
         }
+    });
+}
+
+static void do_startup()
+{
+    if (!controllers)
+    {
+        controllers = [[NSMutableArray array] retain];
+        HIDManager::StartUp();
     }
 }
 
@@ -38,20 +45,19 @@ void detach_tweak_controller(HIDPad::Interface* aInterface)
 
 + (void)startWirelessControllerDiscoveryWithCompletionHandler:(void (^)(void))completionHandler
 {
+    do_startup();
     HIDManager::StartDeviceProbe();
 }
 
 + (void)stopWirelessControllerDiscovery
 {
+    do_startup();
     HIDManager::StopDeviceProbe();
 }
 
 + (NSArray *)controllers
 {
-    HIDManager::StartUp();
-    HIDManager::StartDeviceProbe();
-
-    init_controllers();
+    do_startup();
     return controllers;
 }
 
