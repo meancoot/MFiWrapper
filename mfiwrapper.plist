@@ -1,1 +1,6 @@
-{ Filter = { Bundles = ( "libretro.RetroArch" ); }; }
+Filter = {
+  Executables = ("RetroArch");
+  Bundles = ( "com.apple.GameController" );
+  Mode = "Any";
+};
+
