@@ -60,7 +60,7 @@ enum { GCControllerPlayerIndexUnset = -1 };
 @interface GCController : NSObject
 
 @property (copy) void (^controllerPausedHandler)(GCController *controller);
-@property (copy) NSString *vendorName;
+@property (readonly, copy) NSString *vendorName;
 @property (getter = isAttachedToDevice) BOOL attachedToDevice;
 @property (nonatomic) NSInteger playerIndex;
 @property (retain) GCGamepad *gamepad;

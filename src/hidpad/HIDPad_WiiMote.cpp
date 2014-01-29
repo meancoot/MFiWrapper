@@ -104,3 +104,8 @@ void HIDPad::WiiMote::ProcessButtons()
     for (int i = 0; buttonMap[i][0] != 0xFFFFFFFF; i ++)
         stateManager->SetButton(buttonMap[i][0], (device.btns & buttonMap[i][1]) ? 1.0f : 0.0f);
 }
+
+const char* HIDPad::WiiMote::GetVendorName() const
+{
+    return "Wii Remote";
+}

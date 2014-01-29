@@ -82,3 +82,8 @@ void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
     for (int i = 0; ARRAY_SIZE(button_mapping); i ++)
         stateManager->SetButton(i, (buttons & (1 << button_mapping[i])) ? 1.0f : 0.0f);
 }
+
+const char* HIDPad::Playstation3::GetVendorName() const
+{
+    return "SixAxis/DualShock 3";
+}

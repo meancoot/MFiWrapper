@@ -58,11 +58,15 @@ class GCStateManager : public HIDPad::StateManager
     [_gamepad release];
     [_extendedGamepad release];
     [_controllerPausedHandler release];
-    [_vendorName release];
     [_tweakButtons release];
     [_tweakAxis release];
 
     [super dealloc];
+}
+
+- (NSString*)vendorName
+{
+    return [NSString stringWithUTF8String:self.tweakHIDPad->GetVendorName()];
 }
 
 + (GCController*)controllerForHIDPad:(HIDPad::Interface*)hidpad
