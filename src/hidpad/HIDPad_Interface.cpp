@@ -18,7 +18,7 @@
 
 
 HIDPad::Interface::Interface(HIDManager::Connection* aConnection) :
-    playerIndex(-1), connection(aConnection), stateManager(0)
+    playerIndex(-1), connection(aConnection), listener(0)
 {
     connection = aConnection;
 }

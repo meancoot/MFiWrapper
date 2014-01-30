@@ -70,13 +70,10 @@ namespace HIDManager
     }
     
     void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize)
-    {
-        IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, aData + 1, aSize - 1);
-    
-    
-/*        if (btstackRunLoop == CFRunLoopGetCurrent())
-            bt_send_l2cap(aConnection->channels[0], aData, aSize);
-        else if (btstackRunLoop)
+    {    
+        if (managerRunLoop == CFRunLoopGetCurrent())
+            IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, aData + 1, aSize - 1);
+        else if (managerRunLoop)
         {
             // (TODO) THREADING: What if aConnection is deleted before
             //                   the block is run? Maybe the block can
@@ -85,12 +82,12 @@ namespace HIDManager
             uint8_t* data = new uint8_t[aSize];
             memcpy(data, aData, aSize);
 
-            CFRunLoopPerformBlock(btstackRunLoop, kCFRunLoopCommonModes, ^{
-                bt_send_l2cap(aConnection->channels[0], data, aSize);
+            CFRunLoopPerformBlock(managerRunLoop, kCFRunLoopCommonModes, ^{
+                IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, data + 1, aSize - 1);
                 delete[] data;
             });
-            CFRunLoopWakeUp(btstackRunLoop);
-        }*/
+            CFRunLoopWakeUp(managerRunLoop);
+        }
     }
     
     void StartDeviceProbe()

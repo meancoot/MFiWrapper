@@ -42,7 +42,7 @@ void detach_tweak_controller(HIDPad::Interface* aInterface)
             if (tweak.tweakHIDPad == aInterface)
             {
                 [tweak retain];
-                [controllers removeObjectAtIndex:i];
+                [controllers removeObjectAtIndex:i];                
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
                 [tweak release];
             }

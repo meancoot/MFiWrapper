@@ -13,6 +13,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include "HIDManager.h"
 #include "MFiWrapper.h"
 #include "HIDPad.h"
@@ -83,7 +84,7 @@ void HIDPad::WiiMote::HandlePacket(uint8_t *aData, uint16_t aSize)
 
 void HIDPad::WiiMote::ProcessButtons()
 {
-    if (!stateManager)
+    if (!listener)
         return;
 
     static const uint32_t buttonMap[][2] =
@@ -101,8 +102,12 @@ void HIDPad::WiiMote::ProcessButtons()
         { 0xFFFFFFFF, 0xFFFFFFFF }
     };
     
+    float data[MFi_LastButton];
+    memset(data, 0, sizeof(data));
+    
     for (int i = 0; buttonMap[i][0] != 0xFFFFFFFF; i ++)
-        stateManager->SetButton(buttonMap[i][0], (device.btns & buttonMap[i][1]) ? 1.0f : 0.0f);
+        data[buttonMap[i][0]] = (device.btns & buttonMap[i][1]) ? 1.0f : 0.0f;
+    listener->SetButtons(0, MFi_LastButton, data);
 }
 
 const char* HIDPad::WiiMote::GetVendorName() const

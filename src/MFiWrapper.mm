@@ -15,37 +15,84 @@
 
 #include "MFiWrapper.h"
 
-class GCStateManager : public HIDPad::StateManager
+struct UpdatePacket
+{
+    UpdatePacket(GCController* aController) : 
+        controller(aController), buttonCount(0)
+    {
+        memset(buttonIndex, 0, sizeof(buttonIndex));
+        memset(buttonData, 0, sizeof(buttonData));
+    }
+
+    void AddButton(unsigned aIndex, float aValue)
+    {
+        buttonIndex[buttonCount] = aIndex;
+        buttonData[buttonCount] = aValue;
+        buttonCount ++;
+    }
+
+    void Send()
+    {
+        if (!buttonCount)
+        {
+            delete this;
+            return;
+        }
+    
+        dispatch_async(dispatch_get_main_queue(), ^{             
+            for (unsigned i = 0; i < buttonCount; i ++)
+            {
+                GCControllerButtonInput* button = controller.tweakButtons[buttonIndex[i]];
+                button.pressed = buttonData[i] > .25f;
+                button.value = buttonData[i];
+                        
+                if (button.valueChangedHandler)
+                    button.valueChangedHandler(button, button.value, button.pressed);                
+            }
+            
+            delete this;
+        });
+    }
+
+    GCController* controller;
+    unsigned buttonCount;
+    unsigned buttonIndex[MFi_LastButton];
+    float buttonData[MFi_LastButton];
+};
+
+class GCHIDPadListener : public HIDPad::Listener
 {
     public:
-        GCStateManager(GCController* aController) :
-            controller(aController)
+        GCHIDPadListener(GCController* aController) : controller(aController)
         {
+            memset(buttonData, 0, sizeof(buttonData));
         }
         
-        virtual void ButtonHasChanged(uint32_t aIndex)
-        {
-            GCControllerButtonInput* button = controller.tweakButtons[aIndex];
-            button.pressed = GetButton(aIndex) > .5f;
-            button.value = GetButton(aIndex);
+        virtual void SetButtons(uint32_t aFirst, uint32_t aCount, float* aData)
+        {        
+            // TODO: Don't allocate and delete every time, use a cache.
+            UpdatePacket* packet = new UpdatePacket(controller);
+        
+            for (uint32_t idx = 0, btn = aFirst; idx < aCount && btn < MFi_LastButton; idx ++, btn ++)
+            {
+                if (buttonData[idx] != aData[btn])
+                {
+                    packet->AddButton(idx, aData[idx]);                
+                    buttonData[idx] = aData[btn];
+                }
+            }
             
-            // TODO: Pass up the chain
-            if (button.valueChangedHandler)
-                button.valueChangedHandler((id)button, button.value, button.pressed);
+            packet->Send();
         }
-        
-        virtual void AxisHasChanged(uint32_t aIndex)
-        {
-            GCControllerAxisInput* axis = controller.tweakAxis[aIndex];
-            axis.value = GetAxis(aIndex);
 
-            // TODO: Pass up the chain            
-            if (axis.valueChangedHandler)
-                axis.valueChangedHandler((id)axis, axis.value);
+        virtual void SetAxes(uint32_t aFirst, uint32_t aCount, float* aData)
+        {
+            // TODO        
         }
         
     protected:
         GCController* controller;
+        float buttonData[MFi_LastButton];
 };
 
 /****************/
@@ -86,7 +133,7 @@ class GCStateManager : public HIDPad::StateManager
     tweak.extendedGamepad = [GCExtendedGamepad gamepadForController:tweak];
     tweak.playerIndex = GCControllerPlayerIndexUnset;
 
-    hidpad->SetStateManager(new GCStateManager(tweak));
+    hidpad->SetListener(new GCHIDPadListener(tweak));
 
     return tweak;
 }

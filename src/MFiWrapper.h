@@ -25,7 +25,8 @@ enum MFiButtons
     MFi_A, MFi_B, MFi_X, MFi_Y, MFi_LeftShoulder, MFi_RightShoulder,
     MFi_LeftTrigger, MFi_RightTrigger, MFi_Up, MFi_Down, MFi_Left, MFi_Right,
     MFi_LeftUp, MFi_LeftDown, MFi_LeftLeft, MFi_LeftRight,
-    MFi_RightUp, MFi_RightDown, MFi_RightLeft, MFi_RightRight
+    MFi_RightUp, MFi_RightDown, MFi_RightLeft, MFi_RightRight,
+    MFi_LastButton
 };
 
 #ifdef __OBJC__
@@ -84,7 +85,7 @@ typedef void (^GCGamepadValueChangedHandler)(GCGamepad *gamepad, GCControllerEle
 
 - (GCGamepadSnapshot *)saveSnapshot;
 
-@property (assign) GCControllerDirectionPad *dpad;
+@property (retain) GCControllerDirectionPad *dpad;
 @property (assign) GCControllerButtonInput *buttonA;
 @property (assign) GCControllerButtonInput *buttonB;
 @property (assign) GCControllerButtonInput *buttonX;
@@ -108,13 +109,14 @@ typedef void (^GCExtendedGamepadValueChangedHandler)(GCExtendedGamepad *gamepad,
 
 - (GCExtendedGamepadSnapshot *)saveSnapshot;
 
-@property (assign) GCControllerDirectionPad *dpad;
+@property (retain) GCControllerDirectionPad *dpad;
+@property (retain) GCControllerDirectionPad *leftThumbstick;
+@property (retain) GCControllerDirectionPad *rightThumbstick;
+
 @property (assign) GCControllerButtonInput *buttonA;
 @property (assign) GCControllerButtonInput *buttonB;
 @property (assign) GCControllerButtonInput *buttonX;
 @property (assign) GCControllerButtonInput *buttonY;
-@property (assign) GCControllerDirectionPad *leftThumbstick;
-@property (assign) GCControllerDirectionPad *rightThumbstick;
 @property (assign) GCControllerButtonInput *leftShoulder;
 @property (assign) GCControllerButtonInput *rightShoulder;
 @property (assign) GCControllerButtonInput *leftTrigger;

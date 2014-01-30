@@ -23,10 +23,15 @@ namespace HIDManager
     class Connection;
 }
 
-#include "HIDPad_StateManager.h"
-
 namespace HIDPad
 {
+    class Listener
+    {
+        public:            
+            virtual void SetButtons(uint32_t aFirst, uint32_t aCount, float* aValues) = 0;
+            virtual void SetAxes(uint32_t aFirst, uint32_t aCount, float* aValues) = 0;
+    };
+
     class Interface
     {
         public:
@@ -35,8 +40,8 @@ namespace HIDPad
             Interface(HIDManager::Connection* aConnection);
             virtual ~Interface();
             
-            void SetStateManager(StateManager* aManager) { stateManager = aManager; }        
-            StateManager* GetStateManager() { return stateManager; }
+            void SetListener(Listener* aListener) { listener = aListener; }        
+            Listener* GetListener() { return listener; }
 
             HIDManager::Connection* GetConnection() { return connection; }
 
@@ -53,7 +58,7 @@ namespace HIDPad
             int32_t playerIndex;
             HIDManager::Connection* connection;
             
-            StateManager* stateManager;
+            Listener* listener;
     };
     
     class Playstation3 : public Interface

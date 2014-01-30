@@ -67,7 +67,7 @@ void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
 {
     memcpy(data, aData, aSize);
     
-    if (!stateManager)
+    if (!listener)
         return;
 
     uint32_t buttons = data[3] | (data[4] << 8) | ((data[5] & 1) << 16);
@@ -79,8 +79,12 @@ void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
         MFi_Y, MFi_B, MFi_A, MFi_X, 0xFFFFFFFF
     };
     
+    float data[MFi_LastButton];
+    memset(data, 0, sizeof(data));
+    
     for (int i = 0; ARRAY_SIZE(button_mapping); i ++)
-        stateManager->SetButton(i, (buttons & (1 << button_mapping[i])) ? 1.0f : 0.0f);
+        data[i] = (buttons & (1 << button_mapping[i])) ? 1.0f : 0.0f;
+    listener->SetButtons(0, MFi_LastButton, data);
 }
 
 const char* HIDPad::Playstation3::GetVendorName() const
