@@ -1,7 +1,8 @@
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = mfiwrapper
-mfiwrapper_FILES = src/GCController.xm \
+mfiwrapper_FILES = src/GCController_Hook_iOS.xm \
+                   src/GCController.mm \
                    src/MFiWrapper.mm \
                    src/hidmanager/HIDManager_iOS.cpp \
                    src/hidmanager/btstack_queue.cpp \

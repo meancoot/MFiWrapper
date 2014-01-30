@@ -14,54 +14,11 @@
  */
 
 #include <Foundation/Foundation.h>
-#include <dispatch/dispatch.h>
 #import <objc/runtime.h>
 
 #include "MFiWrapper.h"
-#include "HIDManager.h"
 
-// This array should not be modified on the local thread
-static NSMutableArray* controllers;
-
-void attach_tweak_controller(HIDPad::Interface* aInterface)
-{
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        GCControllerTweak* tweak = [GCControllerTweak controllerForHIDPad:aInterface];
-        [controllers addObject:tweak];
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];        
-    });
-}
-
-void detach_tweak_controller(HIDPad::Interface* aInterface)
-{
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        for (int i = 0; i != [controllers count]; i ++)
-        {
-            GCController* tweak = controllers[i];
-    
-            if (tweak.tweakHIDPad == aInterface)
-            {
-                [tweak retain];
-                [controllers removeObjectAtIndex:i];                
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
-                [tweak release];
-            }
-        }
-    });
-}
-
-static void do_startup()
-{
-    if (!controllers)
-    {
-        controllers = [[NSMutableArray array] retain];
-        HIDManager::StartUp();
-    }
-}
-
-@interface GCControllerHook : NSObject
-@end
-
+@interface GCControllerHook : NSObject @end
 @implementation GCControllerHook
 
 + (void)load
@@ -84,20 +41,17 @@ static void do_startup()
 
 + (void)startWirelessControllerDiscoveryWithCompletionHandler:(void (^)(void))completionHandler
 {
-    do_startup();
-    HIDManager::StartDeviceProbe();
+    MFiWrapper::StartWirelessControllerDiscovery();
 }
 
 + (void)stopWirelessControllerDiscovery
 {
-    do_startup();
-    HIDManager::StopDeviceProbe();
+    MFiWrapper::StopWirelessControllerDiscovery();
 }
 
 + (NSArray *)controllers
 {
-    do_startup();
-    return controllers;
+    return MFiWrapper::GetControllers();
 }
 
 @end

@@ -1,5 +1,6 @@
 OBJECTS = src/MFiWrapper.o \
-          src/GCController_OSX.o \
+          src/GCController_Hook_OSX.o \
+          src/GCController.o \
           src/hidmanager/HIDManager_OSX.o \
           src/hidpad/wiimote.o \
           src/hidpad/HIDPad_Interface.o \

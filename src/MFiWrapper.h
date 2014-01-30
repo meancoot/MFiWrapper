@@ -29,9 +29,25 @@ enum MFiButtons
     MFi_LastButton
 };
 
+// These MFiWrapper functions need to be exposed to C++ code.
+namespace MFiWrapper
+{
+    void AttachController(HIDPad::Interface* aInterface);
+    void DetachController(HIDPad::Interface* aInterface);
+}
+
 #ifdef __OBJC__
 
 #include <Foundation/Foundation.h>
+
+// These MFiWrapper functions do not need to be exposed to C++ code.
+namespace MFiWrapper
+{
+    void Startup();
+    NSArray* GetControllers();
+    void StartWirelessControllerDiscovery();
+    void StopWirelessControllerDiscovery();
+}
 
 #define GCController                GCControllerTweak
 #define GCGamepad                   GCGamepadTweak

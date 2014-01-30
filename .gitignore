@@ -2,3 +2,5 @@
 _/
 .theos/
 obj/
+*.o
+*.dylib
