@@ -22,6 +22,10 @@ MFiWrapperCommon::Connection::Connection(int aDescriptor) :
     Data((uint8_t*)&Packet),
     Position(0)
 {
+    // Make socket non-blocking
+    fcntl(aDescriptor, F_SETFL, fcntl(aDescriptor, F_GETFL, 0) | O_NONBLOCK);
+
+    //
     memset(&Packet, 0, sizeof(Packet));
 
     CFSocketContext ctx = { 0, this, 0, 0, 0 };
