@@ -15,8 +15,8 @@
 
 #include <string.h>
 #include "HIDManager.h"
-#include "MFiWrapper.h"
 #include "HIDPad.h"
+#include "protocol.h"
 
 HIDPad::WiiMote::WiiMote(HIDManager::Connection* aConnection) : Interface(aConnection)
 {            

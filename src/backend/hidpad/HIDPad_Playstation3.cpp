@@ -16,9 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "HIDManager.h"
-#include "MFiWrapper.h"
-
 #include "HIDPad.h"
+#include "protocol.h"
 
 #define ARRAY_SIZE(X) (sizeof(X) / sizeof(X[0]))
 

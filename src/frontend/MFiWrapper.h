@@ -15,15 +15,6 @@
 
 #pragma once
 
-enum MFiButtons
-{
-    MFi_A, MFi_B, MFi_X, MFi_Y, MFi_LeftShoulder, MFi_RightShoulder,
-    MFi_LeftTrigger, MFi_RightTrigger, MFi_Up, MFi_Down, MFi_Left, MFi_Right,
-    MFi_LeftUp, MFi_LeftDown, MFi_LeftLeft, MFi_LeftRight,
-    MFi_RightUp, MFi_RightDown, MFi_RightLeft, MFi_RightRight,
-    MFi_LastButton
-};
-
 #ifdef __OBJC__
 
 #include <Foundation/Foundation.h>
