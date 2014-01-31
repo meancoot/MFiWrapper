@@ -19,7 +19,19 @@
 #include "HIDPad.h"
 #include "protocol.h"
 
-#define ARRAY_SIZE(X) (sizeof(X) / sizeof(X[0]))
+namespace PS3Bits
+{
+    enum
+    {
+        SELECT, LR, R3, START,
+        UP, RIGHT, DOWN, LEFT,
+        L2, R2, L1, R1,
+        TRIANGLE, CIRCLE, CROSS, SQUARE,
+        PS
+    };
+    
+    inline bool Button(int buttons, int button) { return buttons & (1 << button); }
+}
 
 HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection) : Interface(aConnection)
 {
@@ -63,20 +75,31 @@ void HIDPad::Playstation3::SetPlayerIndex(int32_t aIndex)
 void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
 {    
     uint32_t buttons = aData[3] | (aData[4] << 8) | ((aData[5] & 1) << 16);
-    static const uint32_t button_mapping[17] = 
-    {
-        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-        MFi_Up, MFi_Down, MFi_Left, MFi_Right,
-        MFi_LeftTrigger, MFi_RightTrigger, MFi_LeftShoulder, MFi_RightShoulder,
-        MFi_Y, MFi_B, MFi_A, MFi_X, 0xFFFFFFFF
-    };
     
-    float data[32];
-    memset(data, 0, sizeof(data));
+    MFiWInputStatePacket data;
+    memset(&data, 0, sizeof(data));
     
-    for (int i = 0; ARRAY_SIZE(button_mapping); i ++)
-        data[i] = (buttons & (1 << button_mapping[i])) ? 1.0f : 0.0f;
-    MFiWrapperBackend::SendControllerState(this, data);
+    using namespace PS3Bits;
+    data.A             = Button(buttons, CROSS)    ? 1.0f : 0.0f;
+    data.B             = Button(buttons, CIRCLE)   ? 1.0f : 0.0f;
+    data.X             = Button(buttons, SQUARE)   ? 1.0f : 0.0f;
+    data.Y             = Button(buttons, TRIANGLE) ? 1.0f : 0.0f;
+    data.LeftShoulder  = Button(buttons, L1)       ? 1.0f : 0.0f;
+    data.RightShoulder = Button(buttons, R1)       ? 1.0f : 0.0f;
+    data.LeftTrigger   = Button(buttons, L2)       ? 1.0f : 0.0f;
+    data.RightTrigger  = Button(buttons, R2)       ? 1.0f : 0.0f;
+    
+    if (Button(buttons, UP))
+        data.DPadX = 1.0f;
+    else if (Button(buttons, DOWN))
+        data.DPadX = -1.0f;
+
+    if (Button(buttons, LEFT))
+        data.DPadY = -1.0f;
+    else if (Button(buttons, RIGHT))
+        data.DPadY = 1.0f;
+
+    MFiWrapperBackend::SendControllerState(this, data.Data);
 }
 
 const char* HIDPad::Playstation3::GetVendorName() const

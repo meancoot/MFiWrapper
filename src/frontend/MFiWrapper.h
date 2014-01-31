@@ -54,8 +54,7 @@ enum { GCControllerPlayerIndexUnset = -1 };
 @property (retain) GCGamepad *gamepad;
 @property (retain) GCExtendedGamepad *extendedGamepad;
 
-@property(nonatomic, retain) NSMutableArray* tweakButtons;
-@property(nonatomic, retain) NSMutableArray* tweakAxis;
+@property(nonatomic, retain) NSMutableArray* tweakElements;
 @property(nonatomic) uint32_t tweakHandle;
 + (GCController*)controllerForHandle:(uint32_t)handle data:(MFiWConnectPacket)data;
 - (void)tweakUpdateButtons:(const float*)data;
@@ -73,7 +72,7 @@ typedef void (^GCGamepadValueChangedHandler)(GCGamepad *gamepad, GCControllerEle
 
 - (GCGamepadSnapshot *)saveSnapshot;
 
-@property (retain) GCControllerDirectionPad *dpad;
+@property (assign) GCControllerDirectionPad *dpad;
 @property (assign) GCControllerButtonInput *buttonA;
 @property (assign) GCControllerButtonInput *buttonB;
 @property (assign) GCControllerButtonInput *buttonX;
@@ -97,9 +96,9 @@ typedef void (^GCExtendedGamepadValueChangedHandler)(GCExtendedGamepad *gamepad,
 
 - (GCExtendedGamepadSnapshot *)saveSnapshot;
 
-@property (retain) GCControllerDirectionPad *dpad;
-@property (retain) GCControllerDirectionPad *leftThumbstick;
-@property (retain) GCControllerDirectionPad *rightThumbstick;
+@property (assign) GCControllerDirectionPad *dpad;
+@property (assign) GCControllerDirectionPad *leftThumbstick;
+@property (assign) GCControllerDirectionPad *rightThumbstick;
 
 @property (assign) GCControllerButtonInput *buttonA;
 @property (assign) GCControllerButtonInput *buttonB;
@@ -121,9 +120,8 @@ typedef void (^GCExtendedGamepadValueChangedHandler)(GCExtendedGamepad *gamepad,
 @property (assign) GCControllerElement *collection;
 @property (getter = isAnalog) BOOL analog;
 
-@property(nonatomic, assign) GCController* tweakController;
-@property(nonatomic) NSInteger tweakIndex;
-
+- (void)tweakSetValue:(float)value;
+- (uint32_t)tweakSetValues:(const float*)values;
 @end
 
 /***************************/
@@ -135,7 +133,7 @@ typedef void (^GCControllerButtonValueChangedHandler)(GCControllerButtonInput *b
 @property float value;
 @property (getter = isPressed) BOOL pressed;
 
-+ (GCControllerButtonInput*)buttonForController:(GCController*)controller index:(NSInteger)index;
++ (GCControllerButtonInput*)button;
 
 @end
 
@@ -147,7 +145,7 @@ typedef void (^GCControllerAxisValueChangedHandler)(GCControllerAxisInput *axis,
 @property (copy) GCControllerAxisValueChangedHandler valueChangedHandler;
 @property float value;
 
-+ (GCControllerAxisInput*)axisForController:(GCController*)controller index:(NSInteger)index;
++ (GCControllerAxisInput*)axis;
 
 @end
 
@@ -157,14 +155,14 @@ typedef void (^GCControllerAxisValueChangedHandler)(GCControllerAxisInput *axis,
 @interface GCControllerDirectionPad : GCControllerElement
 typedef void (^GCControllerDirectionPadValueChangedHandler)(GCControllerDirectionPad *dpad, float xValue, float yValue);
 @property (copy) GCControllerDirectionPadValueChangedHandler valueChangedHandler;
-@property (assign) GCControllerAxisInput *xAxis;
-@property (assign) GCControllerAxisInput *yAxis;
-@property (assign) GCControllerButtonInput *up;
-@property (assign) GCControllerButtonInput *down;
-@property (assign) GCControllerButtonInput *left;
-@property (assign) GCControllerButtonInput *right;
+@property (retain) GCControllerAxisInput *xAxis;
+@property (retain) GCControllerAxisInput *yAxis;
+@property (retain) GCControllerButtonInput *up;
+@property (retain) GCControllerButtonInput *down;
+@property (retain) GCControllerButtonInput *left;
+@property (retain) GCControllerButtonInput *right;
 
-+ (GCControllerDirectionPad*)dpadForController:(GCController*)controller index:(NSInteger)index;
++ (GCControllerDirectionPad*)dpad;
 
 @end
 

@@ -84,27 +84,25 @@ void HIDPad::WiiMote::HandlePacket(uint8_t *aData, uint16_t aSize)
 
 void HIDPad::WiiMote::ProcessButtons()
 {
-    static const uint32_t buttonMap[][2] =
-    {
-        { MFi_A, WIIMOTE_BUTTON_ONE },
-        { MFi_B, WIIMOTE_BUTTON_TWO },
-        { MFi_X, WIIMOTE_BUTTON_A },
-        { MFi_Y, WIIMOTE_BUTTON_B },
-        { MFi_LeftShoulder, WIIMOTE_BUTTON_MINUS },
-        { MFi_RightShoulder, WIIMOTE_BUTTON_PLUS },
-        { MFi_Up, WIIMOTE_BUTTON_UP },
-        { MFi_Down, WIIMOTE_BUTTON_DOWN },
-        { MFi_Left, WIIMOTE_BUTTON_LEFT },
-        { MFi_Right, WIIMOTE_BUTTON_RIGHT },
-        { 0xFFFFFFFF, 0xFFFFFFFF }
-    };
+    MFiWInputStatePacket data;
+    memset(&data, 0, sizeof(data));
     
-    float data[32];
-    memset(data, 0, sizeof(data));
+    #define B(X) (device.btns & WIIMOTE_BUTTON_##X)
     
-    for (int i = 0; buttonMap[i][0] != 0xFFFFFFFF; i ++)
-        data[buttonMap[i][0]] = (device.btns & buttonMap[i][1]) ? 1.0f : 0.0f;
-    MFiWrapperBackend::SendControllerState(this, data);
+    data.A             = B(ONE)   ? 1.0f : 0.0f;
+    data.B             = B(TWO)   ? 1.0f : 0.0f;
+    data.X             = B(A)     ? 1.0f : 0.0f;
+    data.Y             = B(B)     ? 1.0f : 0.0f;
+    data.LeftShoulder  = B(MINUS) ? 1.0f : 0.0f;
+    data.RightShoulder = B(PLUS)  ? 1.0f : 0.0f;
+    
+         if (B(UP))        data.DPadX = -1.0f;
+    else if (B(DOWN))      data.DPadX =  1.0f;
+    
+         if (B(LEFT))      data.DPadY = -1.0f;
+    else if (B(RIGHT))     data.DPadY =  1.0f;
+
+    MFiWrapperBackend::SendControllerState(this, data.Data);
 }
 
 const char* HIDPad::WiiMote::GetVendorName() const

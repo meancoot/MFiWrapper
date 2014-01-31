@@ -19,11 +19,13 @@
 
 typedef enum
 {
-    MFi_A, MFi_B, MFi_X, MFi_Y, MFi_LeftShoulder, MFi_RightShoulder,
-    MFi_LeftTrigger, MFi_RightTrigger, MFi_Up, MFi_Down, MFi_Left, MFi_Right,
-    MFi_LeftUp, MFi_LeftDown, MFi_LeftLeft, MFi_LeftRight,
-    MFi_RightUp, MFi_RightDown, MFi_RightLeft, MFi_RightRight,
-    MFi_LastButton
+    MFi_A,              MFi_B,
+    MFi_X,              MFi_Y,
+    MFi_LeftShoulder,   MFi_RightShoulder,
+    MFi_LeftTrigger,    MFi_RightTrigger,
+    MFi_LastButton,     MFi_DPad = MFi_LastButton,
+    MFi_LeftThumbstick, MFi_RightThumbstick,
+    MFi_LastDPad,       MFi_LastInput = MFi_LastDPad
 }   MFiButtons;
 
 #pragma pack(push, 1)
@@ -35,8 +37,26 @@ typedef struct
     uint32_t AnalogControls;
 }   MFiWConnectPacket;
 
-typedef struct
+typedef union
 {
+    struct
+    {
+        float A;
+        float B;
+        float X;
+        float Y;
+        float LeftShoulder;
+        float RightShoulder;
+        float LeftTrigger;
+        float RightTrigger;
+        float DPadX;
+        float DPadY;
+        float LeftStickX;
+        float LeftStickY;
+        float RightStickX;
+        float RightSitckY;
+    };
+
     float Data[32];
 }   MFiWInputStatePacket;
 
