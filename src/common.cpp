@@ -15,7 +15,11 @@
 
 #include "common.h"
 
-MFiWrapperCommon::Connection::Connection(int aDescriptor) :
+namespace MFiWrapperCommon {
+
+static const uint32_t PACKET_HEADER = 12;
+
+Connection::Connection(int aDescriptor) :
     Descriptor(aDescriptor),
     Socket(0),
     Source(0),
@@ -35,7 +39,7 @@ MFiWrapperCommon::Connection::Connection(int aDescriptor) :
     CFRunLoopAddSource(CFRunLoopGetCurrent(), Source, kCFRunLoopCommonModes);
 }
 
-MFiWrapperCommon::Connection::~Connection()
+Connection::~Connection()
 {
     // TODO
     
@@ -44,7 +48,62 @@ MFiWrapperCommon::Connection::~Connection()
     CFRelease(Socket);
 }
 
-bool MFiWrapperCommon::Connection::Read()
+void Connection::SendConnect(uint32_t aHandle, const MFiWConnectPacket* aData)
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER + sizeof(MFiWConnectPacket);
+    pkt.Type = MFiWPacketConnect;
+    pkt.Handle = aHandle;
+    pkt.Connect = *aData;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+void Connection::SendDisconnect(uint32_t aHandle)
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER;
+    pkt.Type = MFiWPacketDisconnect;
+    pkt.Handle = aHandle;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+void Connection::SendInputState(uint32_t aHandle, const MFiWInputStatePacket* aData)
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER + sizeof(MFiWInputStatePacket);
+    pkt.Type = MFiWPacketInputState;
+    pkt.Handle = aHandle;
+    pkt.State = *aData;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+void Connection::SendStartDiscovery()
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER;
+    pkt.Type = MFiWPacketStartDiscovery;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+void Connection::SendStopDiscovery()
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER;
+    pkt.Type = MFiWPacketStopDiscovery;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+void Connection::SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex)
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER + sizeof(MFiWPlayerIndexPacket);
+    pkt.Type = MFiWPacketSetPlayerIndex;
+    pkt.Handle = aHandle;
+    pkt.PlayerIndex.Value = aIndex;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+bool Connection::Read()
 {
     unsigned targetSize = (Position < 4) ? 4 : Packet.Size;
 
@@ -59,7 +118,7 @@ bool MFiWrapperCommon::Connection::Read()
     return true;
 }
 
-void MFiWrapperCommon::Connection::Parse()
+void Connection::Parse()
 {
     while (Read())
     {
@@ -73,12 +132,13 @@ void MFiWrapperCommon::Connection::Parse()
     }
 }
 
-void MFiWrapperCommon::Connection::Callback
-     (CFSocketRef s, CFSocketCallBackType callbackType,
-      CFDataRef address, const void *data, void *info)
+void Connection::Callback(CFSocketRef s, CFSocketCallBackType callbackType,
+                          CFDataRef address, const void *data, void *info)
 {
     using namespace MFiWrapperCommon;
 
     Connection* connection = (Connection*)info;    
     connection->Parse();
+}
+
 }

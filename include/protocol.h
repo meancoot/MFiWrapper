@@ -26,6 +26,8 @@ typedef enum
     MFi_LastButton
 }   MFiButtons;
 
+#pragma pack(push, 1)
+
 typedef struct
 {
     char VendorName[256];
@@ -50,7 +52,8 @@ typedef enum
     MFiWPacketInputState,
     MFiWPacketStartDiscovery,
     MFiWPacketStopDiscovery,
-    MFiWPacketSetPlayerIndex
+    MFiWPacketSetPlayerIndex,
+    MFiWPacketLast = 0xFFFFFFFF
 }   MFiWPacketType;
 
 typedef struct
@@ -66,3 +69,5 @@ typedef struct
         MFiWPlayerIndexPacket PlayerIndex;
     };
 }   MFiWDataPacket;
+
+#pragma pack(pop)

@@ -13,6 +13,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "frontend.h"
 #include "MFiWrapper.h"
 #include "protocol.h"
 
@@ -80,7 +81,11 @@
     }
 }
 
-// TODO: PLAYER INDEX
+- (void)setPlayerIndex:(NSInteger)index
+{
+    _playerIndex = index;
+    MFiWrapperFrontend::SetControllerIndex(self.tweakHandle, index);
+}
 
 @end
 

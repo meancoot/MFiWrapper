@@ -11,7 +11,7 @@ namespace MFiWrapperFrontend {
 
 NSMutableArray* controllers;
 
-class FrontendConnection : MFiWrapperCommon::Connection
+class FrontendConnection : public MFiWrapperCommon::Connection
 {
     public:
         FrontendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
@@ -94,11 +94,18 @@ NSArray* GetControllers()
 void StartWirelessControllerDiscovery()
 {
     Startup();
+    connection->SendStartDiscovery();
 }
 
 void StopWirelessControllerDiscovery()
 {
     Startup();
+    connection->SendStopDiscovery();    
+}
+
+void SetControllerIndex(uint32_t aHandle, int32_t aIndex)
+{
+    connection->SendSetPlayerIndex(aHandle, aIndex);
 }
 
 }

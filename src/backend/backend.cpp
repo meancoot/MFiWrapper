@@ -18,7 +18,7 @@ static std::map<HIDPad::Interface*, uint32_t> devices;
 static pthread_t thread;
 static int sockets[2] = { -1, -1 };
 
-class BackendConnection : MFiWrapperCommon::Connection
+class BackendConnection : public MFiWrapperCommon::Connection
 {
     public:
         BackendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
@@ -77,15 +77,10 @@ void AttachController(HIDPad::Interface* aInterface)
     {
         uint32_t handle = nextHandle ++;
         devices[aInterface] = handle;
-        
-        MFiWDataPacket pkt;
-        pkt.Size = sizeof(MFiWDataPacket);
-        pkt.Type = MFiWPacketConnect;
-        pkt.Handle = handle;
-        strlcpy(pkt.Connect.VendorName, "Test", sizeof(pkt.Connect.VendorName));
-        pkt.Connect.PresentControls = 0xFFFFFFFF;
-        pkt.Connect.AnalogControls = 0;
-        write(sockets[0], &pkt, pkt.Size);
+
+        MFiWConnectPacket pkt = { { 0 }, 0xFFFFFFFF, 0 };
+        strlcpy(pkt.VendorName, "Test", sizeof(pkt.VendorName));
+        connection->SendConnect(handle, &pkt);
     }
 }
 
@@ -96,12 +91,8 @@ void DetachController(HIDPad::Interface* aInterface)
     {
         uint32_t handle = device->second;
         devices.erase(device);
-        
-        MFiWDataPacket pkt;
-        pkt.Size = sizeof(MFiWDataPacket);
-        pkt.Type = MFiWPacketDisconnect;
-        pkt.Handle = handle;
-        write(sockets[0], &pkt, pkt.Size);
+     
+        connection->SendDisconnect(handle);
     }
 }
 
@@ -112,12 +103,9 @@ void SendControllerState(HIDPad::Interface* aInterface, const float aData[32])
     {
         uint32_t handle = device->second;
         
-        MFiWDataPacket pkt;
-        pkt.Size = sizeof(MFiWDataPacket);
-        pkt.Type = MFiWPacketInputState;
-        pkt.Handle = handle;
-        memcpy(pkt.State.Data, aData, sizeof(pkt.State.Data));
-        write(sockets[0], &pkt, pkt.Size);
+        MFiWInputStatePacket pkt;
+        memcpy(pkt.Data, aData, sizeof(pkt.Data));
+        connection->SendInputState(handle, &pkt);
     }
 }
 
