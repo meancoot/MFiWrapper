@@ -37,7 +37,7 @@ static void* ManagerThread(void* aUnused)
     return 0;
 }
 
-int HACKStart()
+extern "C" int HACKStart()
 {
     if (!thread)
     {

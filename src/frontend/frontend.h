@@ -17,10 +17,7 @@
 
 #include <Foundation/Foundation.h>
 
-namespace MFiWrapperFrontend {
-
 NSArray* GetControllers();
 void StartWirelessControllerDiscovery();
 void StopWirelessControllerDiscovery();
 
-}
