@@ -42,11 +42,6 @@ extern "C" int HACKStart()
     if (!thread)
     {
         socketpair(PF_LOCAL, SOCK_STREAM, 0, sockets);
-        
-        // Non-blocking
-        fcntl(sockets[0], F_SETFL, fcntl(sockets[0], F_GETFL, 0) | O_NONBLOCK);
-        fcntl(sockets[1], F_SETFL, fcntl(sockets[1], F_GETFL, 0) | O_NONBLOCK);
-        
         pthread_create(&thread, 0, ManagerThread, 0);
     }
     

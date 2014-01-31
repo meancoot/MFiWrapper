@@ -57,9 +57,7 @@ enum { GCControllerPlayerIndexUnset = -1 };
 @property(nonatomic, retain) NSMutableArray* tweakButtons;
 @property(nonatomic, retain) NSMutableArray* tweakAxis;
 @property(nonatomic) uint32_t tweakHandle;
-
 + (GCController*)controllerForHandle:(uint32_t)handle data:(struct ConnectionOpenPacket)data;
-- (void)tweakUpdateButtons:(const float*)data;
 
 @end
 
