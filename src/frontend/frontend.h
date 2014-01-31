@@ -22,5 +22,6 @@ namespace MFiWrapperFrontend {
 NSArray* GetControllers();
 void StartWirelessControllerDiscovery();
 void StopWirelessControllerDiscovery();
+void SetControllerIndex(uint32_t aHandle, int32_t aIndex);
 
 }

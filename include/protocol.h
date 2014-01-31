@@ -15,7 +15,9 @@
 
 #pragma once
 
-typedef enum MFiButtons
+#include <stdint.h>
+
+typedef enum
 {
     MFi_A, MFi_B, MFi_X, MFi_Y, MFi_LeftShoulder, MFi_RightShoulder,
     MFi_LeftTrigger, MFi_RightTrigger, MFi_Up, MFi_Down, MFi_Left, MFi_Right,
@@ -24,35 +26,48 @@ typedef enum MFiButtons
     MFi_LastButton
 }   MFiButtons;
 
-typedef struct ConnectionOpenPacket
+#pragma pack(push, 1)
+
+typedef struct
 {
     char VendorName[256];
     uint32_t PresentControls;
     uint32_t AnalogControls;
-}   ConnectionOpenPacket;
+}   MFiWConnectPacket;
 
-typedef struct ConnectionClosedPacket
-{
-    int dummy;
-}   ConnectionClosedPacket;
-
-typedef struct StatePacket
+typedef struct
 {
     float Data[32];
-}   StatePacket;
+}   MFiWInputStatePacket;
 
-typedef enum PacketType { PKT_OPEN, PKT_CLOSE, PKT_STATE } PacketName;
+typedef struct
+{
+    int32_t Value;
+}   MFiWPlayerIndexPacket;
 
-typedef struct DataPacket
+typedef enum 
+{
+    MFiWPacketConnect,
+    MFiWPacketDisconnect,
+    MFiWPacketInputState,
+    MFiWPacketStartDiscovery,
+    MFiWPacketStopDiscovery,
+    MFiWPacketSetPlayerIndex,
+    MFiWPacketLast = 0xFFFFFFFF
+}   MFiWPacketType;
+
+typedef struct
 {
     uint32_t Size;
-    PacketType Type;
+    MFiWPacketType Type;
     uint32_t Handle;
     
     union
     {
-        ConnectionOpenPacket Open;
-        ConnectionClosedPacket Closed;
-        StatePacket State;
+        MFiWConnectPacket Connect;
+        MFiWInputStatePacket State;
+        MFiWPlayerIndexPacket PlayerIndex;
     };
-}   DataPacket;
+}   MFiWDataPacket;
+
+#pragma pack(pop)

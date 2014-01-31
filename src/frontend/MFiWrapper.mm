@@ -13,6 +13,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "frontend.h"
 #include "MFiWrapper.h"
 #include "protocol.h"
 
@@ -21,7 +22,7 @@
 /****************/
 @implementation GCController
 
-+ (GCController*)controllerForHandle:(uint32_t)handle data:(struct ConnectionOpenPacket)data
++ (GCController*)controllerForHandle:(uint32_t)handle data:(MFiWConnectPacket)data
 {
     GCController* tweak = [GCController new];
     tweak.tweakHandle = handle;
@@ -63,7 +64,28 @@
     [super dealloc];
 }
 
-// TODO: PLAYER INDEX
+- (void)tweakUpdateButtons:(const float*)data
+{
+    for (int i = 0; i != 20; i ++)
+    {
+        GCControllerButtonInput* btn = self.tweakButtons[i];
+
+        if (data[i] != btn.value)
+        {
+            btn.value = data[i];
+            btn.pressed = data[i] >= .25f;
+            
+            if (btn.valueChangedHandler)
+                btn.valueChangedHandler(btn, btn.value, btn.pressed);
+        }
+    }
+}
+
+- (void)setPlayerIndex:(NSInteger)index
+{
+    _playerIndex = index;
+    MFiWrapperFrontend::SetControllerIndex(self.tweakHandle, index);
+}
 
 @end
 

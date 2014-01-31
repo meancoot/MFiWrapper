@@ -1,7 +1,9 @@
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = mfiwrapper
-mfiwrapper_FILES =  src/frontend/frontend.mm \
+mfiwrapper_FILES =  src/common.cpp \
+                    \
+                    src/frontend/frontend.mm \
                     src/frontend/GCController_Hook_iOS.xm \
                     src/frontend/MFiWrapper.mm \
                     \
@@ -14,7 +16,7 @@ mfiwrapper_FILES =  src/frontend/frontend.mm \
                     src/backend/hidpad/HIDPad_WiiMote.cpp \
                     src/backend/hidpad/HIDPad.cpp
 
-mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend
+mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend -Isrc
 mfiwrapper_CCFLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
 
 
