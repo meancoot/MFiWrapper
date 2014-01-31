@@ -5,30 +5,64 @@
 #include <map>
 
 #include "HIDManager.h"
+#include "HIDPad.h"
 
 #include "backend.h"
 #include "protocol.h"
+#include "common.h"
 
+namespace MFiWrapperBackend {
 
+static uint32_t nextHandle = 1;
+static std::map<HIDPad::Interface*, uint32_t> devices;
 static pthread_t thread;
-static CFRunLoopRef runLoop;
-static CFSocketRef _socket;
-static CFRunLoopSourceRef _socketSource;
 static int sockets[2] = { -1, -1 };
 
-static void HandleSocketEvent(CFSocketRef s, CFSocketCallBackType callbackType,
-                              CFDataRef address, const void *data, void *info)
+class BackendConnection : MFiWrapperCommon::Connection
 {
-    printf("WHATA\n");
-}
+    public:
+        BackendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
+        
+        HIDPad::Interface* FindDeviceByHandle(uint32_t aHandle)
+        {
+            for (auto i = devices.begin(); i != devices.end(); i ++)
+                if (i->second == aHandle)
+                    return i->first;
+            return 0;
+        }
+        
+        void HandlePacket(const MFiWDataPacket* aPacket)
+        {
+            switch(aPacket->Type)
+            {
+                case MFiWPacketStartDiscovery:
+                    HIDManager::StartDeviceProbe();
+                    return;
+                
+                case MFiWPacketStopDiscovery:
+                    HIDManager::StopDeviceProbe();
+                    return;
+                
+                case MFiWPacketSetPlayerIndex:
+                {
+                    HIDPad::Interface* device = FindDeviceByHandle(aPacket->Handle);
+                    if (device)
+                        device->SetPlayerIndex(aPacket->PlayerIndex.Value);
+                    return;
+                }
+                
+                default:
+                    printf("Unkown packet set to backend: %d\n", aPacket->Type);
+                    return;
+            }        
+        }
+};
 
+BackendConnection* connection;
 
 static void* ManagerThread(void* aUnused)
 {
-    runLoop = CFRunLoopGetCurrent();
-
-    _socket = CFSocketCreateWithNative(0, sockets[0], kCFSocketDataCallBack, HandleSocketEvent, 0);        
-    _socketSource = CFSocketCreateRunLoopSource(0, _socket, 0);
+    connection = new BackendConnection(sockets[0]);
 
     HIDManager::StartUp();    
     CFRunLoopRun();
@@ -36,27 +70,6 @@ static void* ManagerThread(void* aUnused)
     
     return 0;
 }
-
-int HACKStart()
-{
-    if (!thread)
-    {
-        socketpair(PF_LOCAL, SOCK_STREAM, 0, sockets);
-        pthread_create(&thread, 0, ManagerThread, 0);
-    }
-    
-    return sockets[1];
-}
-
-void SendProtocolMessage(const void* aData, uint32_t aSize)
-{
-    write(sockets[0], aData, aSize);
-}
-
-namespace MFiWrapperBackend {
-
-uint32_t nextHandle = 1;
-std::map<HIDPad::Interface*, uint32_t> devices;
 
 void AttachController(HIDPad::Interface* aInterface)
 {
@@ -108,4 +121,17 @@ void SendControllerState(HIDPad::Interface* aInterface, const float aData[32])
     }
 }
 
+}
+
+int HACKStart()
+{
+    using namespace MFiWrapperBackend;
+
+    if (!thread)
+    {
+        socketpair(PF_LOCAL, SOCK_STREAM, 0, sockets);
+        pthread_create(&thread, 0, ManagerThread, 0);
+    }
+    
+    return sockets[1];
 }

@@ -23,8 +23,10 @@ MFiWrapperCommon::Connection::Connection(int aDescriptor) :
     Position(0)
 {
     memset(&Packet, 0, sizeof(Packet));
-    
-    Socket = CFSocketCreateWithNative(0, Descriptor, kCFSocketReadCallBack, 0, 0);
+
+    CFSocketContext ctx = { 0, this, 0, 0, 0 };
+    Socket = CFSocketCreateWithNative(0, Descriptor, kCFSocketReadCallBack,
+                                      Callback, &ctx);
     Source = CFSocketCreateRunLoopSource(0, Socket, 0);
     CFRunLoopAddSource(CFRunLoopGetCurrent(), Source, kCFRunLoopCommonModes);
 }
@@ -65,4 +67,14 @@ void MFiWrapperCommon::Connection::Parse()
             memset(&Packet, 0, sizeof(Packet));
         }
     }
+}
+
+void MFiWrapperCommon::Connection::Callback
+     (CFSocketRef s, CFSocketCallBackType callbackType,
+      CFDataRef address, const void *data, void *info)
+{
+    using namespace MFiWrapperCommon;
+
+    Connection* connection = (Connection*)info;    
+    connection->Parse();
 }

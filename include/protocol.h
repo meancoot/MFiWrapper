@@ -38,11 +38,19 @@ typedef struct
     float Data[32];
 }   MFiWInputStatePacket;
 
+typedef struct
+{
+    int32_t Value;
+}   MFiWPlayerIndexPacket;
+
 typedef enum 
 {
     MFiWPacketConnect,
     MFiWPacketDisconnect,
-    MFiWPacketInputState
+    MFiWPacketInputState,
+    MFiWPacketStartDiscovery,
+    MFiWPacketStopDiscovery,
+    MFiWPacketSetPlayerIndex
 }   MFiWPacketType;
 
 typedef struct
@@ -55,5 +63,6 @@ typedef struct
     {
         MFiWConnectPacket Connect;
         MFiWInputStatePacket State;
+        MFiWPlayerIndexPacket PlayerIndex;
     };
 }   MFiWDataPacket;

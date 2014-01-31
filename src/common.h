@@ -32,6 +32,9 @@ class Connection
     private:
         bool Read();
         void Parse();    
+        static void Callback(CFSocketRef s, CFSocketCallBackType callbackType,
+                             CFDataRef address, const void *data, void *info);
+    
     
         int Descriptor;
         CFSocketRef Socket;

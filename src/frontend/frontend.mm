@@ -68,7 +68,8 @@ class FrontendConnection : MFiWrapperCommon::Connection
             {
                 case MFiWPacketConnect:     AttachController(aPacket); break;
                 case MFiWPacketDisconnect:  DetachController(aPacket); break;
-                case MFiWPacketInputState:  ControllerState (aPacket);  break;
+                case MFiWPacketInputState:  ControllerState (aPacket); break;
+                default: printf("Unknown packet sent to frontend: %d\n", aPacket->Type); break;
             }        
         }
 };
