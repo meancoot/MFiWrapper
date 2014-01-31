@@ -36,6 +36,7 @@ static void ControllerState(const DataPacket* aData);
         _descriptor = fd;
         _socket = CFSocketCreateWithNative(0, fd, kCFSocketReadCallBack, HandleSocketEvent, 0);
         _source = CFSocketCreateRunLoopSource(0, _socket, 0);
+        CFRunLoopAddSource(CFRunLoopGetMain(), _source, kCFRunLoopCommonModes);
     }
     
     return self;
@@ -75,11 +76,14 @@ static void ControllerState(const DataPacket* aData);
 
     ssize_t result = read(self.socket.descriptor, &self.packetData[self.packetPosition],
                           targetSize - self.packetPosition);
+                          
+    if (result < 0)
+        return NO;
+                          
     self.packetPosition += result;
-
-    assert(result >= 0 && self.packetPosition <= targetSize);
+    assert(self.packetPosition <= targetSize);
     
-    return result ? YES : NO;
+    return (result > 0) ? YES : NO;
 }
 
 - (void)parse
@@ -142,7 +146,13 @@ static void DetachController(const DataPacket* aData)
 
 static void ControllerState(const DataPacket* aData)
 {
-    
+    for (unsigned i = 0; i < [controllers count]; i ++)
+    {
+        GCController* tweak = controllers[i];
+
+        if (tweak.tweakHandle == aData->Handle)
+            [tweak tweakUpdateButtons:aData->State.Data];
+    }
 }
 
 void Startup()
