@@ -17,6 +17,7 @@
 
 #ifdef __OBJC__
 
+#include "protocol.h"
 #include <Foundation/Foundation.h>
 
 #define GCController                GCControllerTweak
@@ -47,7 +48,7 @@ enum { GCControllerPlayerIndexUnset = -1 };
 @interface GCController : NSObject
 
 @property (copy) void (^controllerPausedHandler)(GCController *controller);
-@property (readonly, copy) NSString *vendorName;
+@property (copy) NSString *vendorName;
 @property (getter = isAttachedToDevice) BOOL attachedToDevice;
 @property (nonatomic) NSInteger playerIndex;
 @property (retain) GCGamepad *gamepad;
@@ -55,8 +56,8 @@ enum { GCControllerPlayerIndexUnset = -1 };
 
 @property(nonatomic, retain) NSMutableArray* tweakButtons;
 @property(nonatomic, retain) NSMutableArray* tweakAxis;
-//@property(nonatomic) HIDPad::Interface* tweakHIDPad;
-//+ (GCController*)controllerForHIDPad:(HIDPad::Interface*)hidpad;
+@property(nonatomic) uint32_t tweakHandle;
++ (GCController*)controllerForHandle:(uint32_t)handle data:(struct ConnectionOpenPacket)data;
 
 @end
 

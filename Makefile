@@ -3,6 +3,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = mfiwrapper
 mfiwrapper_FILES =  src/frontend/frontend.mm \
                     src/frontend/GCController_Hook_iOS.xm \
+                    src/frontend/MFiWrapper.mm \
                     \
                     src/backend/backend.cpp \
                     src/backend/hidmanager/HIDManager_iOS.cpp \

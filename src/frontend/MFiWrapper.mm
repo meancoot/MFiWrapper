@@ -14,94 +14,46 @@
  */
 
 #include "MFiWrapper.h"
-
-struct UpdatePacket
-{
-    UpdatePacket(GCController* aController) : 
-        controller(aController), buttonCount(0)
-    {
-        memset(buttonIndex, 0, sizeof(buttonIndex));
-        memset(buttonData, 0, sizeof(buttonData));
-    }
-
-    void AddButton(unsigned aIndex, float aValue)
-    {
-        buttonIndex[buttonCount] = aIndex;
-        buttonData[buttonCount] = aValue;
-        buttonCount ++;
-    }
-
-    void Send()
-    {
-        if (!buttonCount)
-        {
-            delete this;
-            return;
-        }
-    
-        dispatch_async(dispatch_get_main_queue(), ^{             
-            for (unsigned i = 0; i < buttonCount; i ++)
-            {
-                GCControllerButtonInput* button = controller.tweakButtons[buttonIndex[i]];
-                button.pressed = buttonData[i] > .25f;
-                button.value = buttonData[i];
-                        
-                if (button.valueChangedHandler)
-                    button.valueChangedHandler(button, button.value, button.pressed);                
-            }
-            
-            delete this;
-        });
-    }
-
-    GCController* controller;
-    unsigned buttonCount;
-    unsigned buttonIndex[MFi_LastButton];
-    float buttonData[MFi_LastButton];
-};
-
-class GCHIDPadListener : public HIDPad::Listener
-{
-    public:
-        GCHIDPadListener(GCController* aController) : controller(aController)
-        {
-            memset(buttonData, 0, sizeof(buttonData));
-        }
-        
-        virtual void SetButtons(uint32_t aFirst, uint32_t aCount, float* aData)
-        {        
-            // TODO: Don't allocate and delete every time, use a cache.
-            UpdatePacket* packet = new UpdatePacket(controller);
-        
-            for (uint32_t idx = 0, btn = aFirst; idx < aCount && btn < MFi_LastButton; idx ++, btn ++)
-            {
-                if (buttonData[idx] != aData[btn])
-                {
-                    packet->AddButton(idx, aData[idx]);                
-                    buttonData[idx] = aData[btn];
-                }
-            }
-            
-            packet->Send();
-        }
-
-        virtual void SetAxes(uint32_t aFirst, uint32_t aCount, float* aData)
-        {
-            // TODO        
-        }
-        
-    protected:
-        GCController* controller;
-        float buttonData[MFi_LastButton];
-};
+#include "protocol.h"
 
 /****************/
 /* GCController */
 /****************/
 @implementation GCController
 
++ (GCController*)controllerForHandle:(uint32_t)handle data:(struct ConnectionOpenPacket)data
+{
+    GCController* tweak = [GCController new];
+    tweak.tweakHandle = handle;
+    tweak.vendorName = [NSString stringWithUTF8String:data.VendorName];
+
+    tweak.tweakButtons = [NSMutableArray array];
+    for (int i = 0; i != 20; i ++)
+    {
+        GCControllerButtonInput* button = [GCControllerButtonInput buttonForController:tweak index:i];
+        button.analog = (data.AnalogControls & (1 << i)) ? YES : NO;
+        [tweak.tweakButtons addObject:button];
+    }
+        
+    tweak.tweakAxis = [NSMutableArray array];
+    for (int i = 0; i != 6; i ++)
+    {
+        GCControllerAxisInput* axis = [GCControllerAxisInput axisForController:tweak index:i];
+        axis.analog = (data.AnalogControls & (1 << (20 + 1))) ? YES : NO;
+        [tweak.tweakAxis addObject:axis];
+    }
+
+    tweak.gamepad = [GCGamepad gamepadForController:tweak];
+    tweak.extendedGamepad = [GCExtendedGamepad gamepadForController:tweak];
+    tweak.playerIndex = GCControllerPlayerIndexUnset;
+
+    return [tweak autorelease];
+}
+
 - (void)dealloc
 {
+    [_controllerPausedHandler release];
+    [_vendorName release];
     [_gamepad release];
     [_extendedGamepad release];
     [_controllerPausedHandler release];
@@ -111,42 +63,7 @@ class GCHIDPadListener : public HIDPad::Listener
     [super dealloc];
 }
 
-- (NSString*)vendorName
-{
-    return [NSString stringWithUTF8String:self.tweakHIDPad->GetVendorName()];
-}
-
-+ (GCController*)controllerForHIDPad:(HIDPad::Interface*)hidpad
-{
-    GCController* tweak = [GCController new];
-
-    tweak.tweakButtons = [NSMutableArray array];
-    for (int i = 0; i != 20; i ++)
-        [tweak.tweakButtons addObject:[GCControllerButtonInput buttonForController:tweak index:i]];
-        
-    tweak.tweakAxis = [NSMutableArray array];
-    for (int i = 0; i != 6; i ++)
-        [tweak.tweakAxis addObject:[GCControllerAxisInput axisForController:tweak index:i]];
-
-    tweak.tweakHIDPad = hidpad;
-    tweak.gamepad = [GCGamepad gamepadForController:tweak];
-    tweak.extendedGamepad = [GCExtendedGamepad gamepadForController:tweak];
-    tweak.playerIndex = GCControllerPlayerIndexUnset;
-
-    hidpad->SetListener(new GCHIDPadListener(tweak));
-
-    return tweak;
-}
-
-- (void)setPlayerIndex:(NSInteger)index
-{
-    self.tweakHIDPad->SetPlayerIndex(index);
-}
-
-- (NSInteger)playerIndex
-{
-    return self.tweakHIDPad->GetPlayerIndex();
-}
+// TODO: PLAYER INDEX
 
 @end
 
@@ -154,12 +71,6 @@ class GCHIDPadListener : public HIDPad::Listener
 /* GCGamepad */
 /*************/
 @implementation GCGamepad
-
-- (void)dealloc
-{
-    [_dpad release];    
-    [super dealloc];
-}
 
 + (GCGamepad*)gamepadForController:(GCController*)controller
 {
@@ -176,7 +87,14 @@ class GCHIDPadListener : public HIDPad::Listener
 
     tweak.dpad = [GCControllerDirectionPad dpadForController:controller index:0];
     
-    return tweak;
+    return [tweak autorelease];
+}
+
+- (void)dealloc
+{
+    [_valueChangedHandler release];
+    [_dpad release];    
+    [super dealloc];
 }
 
 - (GCGamepadSnapshot*)saveSnapshot
@@ -190,15 +108,6 @@ class GCHIDPadListener : public HIDPad::Listener
 /* GCExtendedGamepad */
 /*********************/
 @implementation GCExtendedGamepad
-
-- (void)dealloc
-{
-    [_dpad release];
-    [_leftThumbstick release];
-    [_rightThumbstick release];
-    
-    [super dealloc];
-}
 
 + (GCExtendedGamepad*)gamepadForController:(GCController*)controller
 {
@@ -219,7 +128,17 @@ class GCHIDPadListener : public HIDPad::Listener
     tweak.leftThumbstick = [GCControllerDirectionPad dpadForController:controller index:1];
     tweak.rightThumbstick = [GCControllerDirectionPad dpadForController:controller index:2];
     
-    return tweak;
+    return [tweak autorelease];
+}
+
+- (void)dealloc
+{
+    [_valueChangedHandler release];
+    [_dpad release];
+    [_leftThumbstick release];
+    [_rightThumbstick release];
+    
+    [super dealloc];
 }
 
 - (GCExtendedGamepadSnapshot*)saveSnapshot
@@ -232,8 +151,7 @@ class GCHIDPadListener : public HIDPad::Listener
 /***********************/
 /* GCControllerElement */
 /***********************/
-@implementation GCControllerElement
-@end
+@implementation GCControllerElement @end
 
 /***************************/
 /* GCControllerButtonInput */
@@ -245,7 +163,13 @@ class GCHIDPadListener : public HIDPad::Listener
     GCControllerButtonInput* tweak = [GCControllerButtonInput new];
     tweak.tweakController = controller;
     tweak.tweakIndex = index;
-    return tweak;
+    return [tweak autorelease];
+}
+
+- (void)dealloc
+{
+    [_valueChangedHandler release];
+    [super dealloc];
 }
 
 @end
@@ -260,7 +184,13 @@ class GCHIDPadListener : public HIDPad::Listener
     GCControllerAxisInput* tweak = [GCControllerAxisInput new];
     tweak.tweakController = controller;
     tweak.tweakIndex = index;
-    return tweak;
+    return [tweak autorelease];
+}
+
+- (void)dealloc
+{
+    [_valueChangedHandler release];
+    [super dealloc];
 }
 
 @end
@@ -294,7 +224,13 @@ class GCHIDPadListener : public HIDPad::Listener
     tweak.right = controller.tweakButtons[8 + (index * 4) + 3];
     tweak.right.collection = tweak;
 
-    return tweak;
+    return [tweak autorelease];
+}
+
+- (void)delloc
+{
+    [_valueChangedHandler release];
+    [super dealloc];
 }
 
 @end

@@ -1,5 +1,6 @@
 OBJECTS = src/frontend/frontend.o \
           src/frontend/GCController_Hook_OSX.o \
+          src/frontend/MFiWrapper.o \
           \
           src/backend/backend.o \
           src/backend/hidmanager/HIDManager_OSX.o \
