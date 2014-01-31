@@ -84,9 +84,6 @@ void HIDPad::WiiMote::HandlePacket(uint8_t *aData, uint16_t aSize)
 
 void HIDPad::WiiMote::ProcessButtons()
 {
-    if (!listener)
-        return;
-
     static const uint32_t buttonMap[][2] =
     {
         { MFi_A, WIIMOTE_BUTTON_ONE },
@@ -102,12 +99,12 @@ void HIDPad::WiiMote::ProcessButtons()
         { 0xFFFFFFFF, 0xFFFFFFFF }
     };
     
-    float data[MFi_LastButton];
+    float data[32];
     memset(data, 0, sizeof(data));
     
     for (int i = 0; buttonMap[i][0] != 0xFFFFFFFF; i ++)
         data[buttonMap[i][0]] = (device.btns & buttonMap[i][1]) ? 1.0f : 0.0f;
-    listener->SetButtons(0, MFi_LastButton, data);
+    MFiWrapperBackend::SendControllerState(this, data);
 }
 
 const char* HIDPad::WiiMote::GetVendorName() const

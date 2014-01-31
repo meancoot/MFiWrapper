@@ -14,7 +14,6 @@
  */
 
 #include <stdio.h>
-#include <pthread.h>
 #include <assert.h>
 #include <set>
 
@@ -25,17 +24,11 @@
 
 namespace HIDManager
 {
-#ifndef NDEBUG
-    #define ASSERT_THREAD assert(pthread_equal(managerThread, pthread_self()))
-#else
-    #define ASSERT_THREAD
-#endif
-
-    pthread_t managerThread;
-    CFRunLoopRef managerRunLoop;
     IOHIDManagerRef g_hid_manager;
-
-    void* ManagerThreadFunction(void* unused);
+    static void append_matching_dictionary(CFMutableArrayRef array, uint32_t page, uint32_t use);
+    static void DeviceRemoved(void* context, IOReturn result, void* sender);
+    static void DeviceReport(void* context, IOReturn result, void *sender, IOHIDReportType type, uint32_t reportID, uint8_t *report, CFIndex reportLength);
+    static void DeviceAttached(void* context, IOReturn result, void* sender, IOHIDDeviceRef device);
 
     class Connection
     {   public:
@@ -45,13 +38,11 @@ namespace HIDManager
     
         Connection() : hidpad(0), device(0)
         {
-            ASSERT_THREAD;
             memset(data, 0, sizeof(data));
         }
     
         ~Connection()
         {
-            ASSERT_THREAD;      
             if (device)
                 IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
             delete hidpad;
@@ -59,35 +50,33 @@ namespace HIDManager
     };
         
     void StartUp()
-    {
-        if (!managerThread)
-            pthread_create(&managerThread, 0, ManagerThreadFunction, 0);  
+    {   
+        g_hid_manager = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
+
+        CFMutableArrayRef matcher = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+        append_matching_dictionary(matcher, kHIDPage_GenericDesktop, kHIDUsage_GD_Joystick);
+        append_matching_dictionary(matcher, kHIDPage_GenericDesktop, kHIDUsage_GD_GamePad);
+
+        IOHIDManagerSetDeviceMatchingMultiple(g_hid_manager, matcher);
+        CFRelease(matcher);
+
+        IOHIDManagerRegisterDeviceMatchingCallback(g_hid_manager, DeviceAttached, 0);
+        IOHIDManagerScheduleWithRunLoop(g_hid_manager, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+
+        IOHIDManagerOpen(g_hid_manager, kIOHIDOptionsTypeNone);
     }
     
     void ShutDown()
     {
-
+        IOHIDManagerClose(g_hid_manager, kIOHIDOptionsTypeNone);
+        IOHIDManagerUnscheduleFromRunLoop(g_hid_manager, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+      
+        CFRelease(g_hid_manager);
     }
     
     void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize)
     {    
-        if (managerRunLoop == CFRunLoopGetCurrent())
-            IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, aData + 1, aSize - 1);
-        else if (managerRunLoop)
-        {
-            // (TODO) THREADING: What if aConnection is deleted before
-            //                   the block is run? Maybe the block can
-            //                   check if aConnection is present in the
-            //                   Connections set before running.
-            uint8_t* data = new uint8_t[aSize];
-            memcpy(data, aData, aSize);
-
-            CFRunLoopPerformBlock(managerRunLoop, kCFRunLoopCommonModes, ^{
-                IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, data + 1, aSize - 1);
-                delete[] data;
-            });
-            CFRunLoopWakeUp(managerRunLoop);
-        }
+        IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, aData + 1, aSize - 1);
     }
     
     void StartDeviceProbe()
@@ -140,7 +129,7 @@ namespace HIDManager
        connection->device = device;
 
        IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
-       IOHIDDeviceScheduleWithRunLoop(device, managerRunLoop, kCFRunLoopCommonModes);
+       IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
        IOHIDDeviceRegisterRemovalCallback(device, DeviceRemoved, connection);
 
        CFStringRef device_name_ref = (CFStringRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
@@ -149,33 +138,5 @@ namespace HIDManager
 
        connection->hidpad = HIDPad::Connect(device_name, connection);
        IOHIDDeviceRegisterInputReportCallback(device, connection->data + 1, sizeof(connection->data) - 1, DeviceReport, connection);
-    }
-    
-    void* ManagerThreadFunction(void* unused)
-    {
-        ASSERT_THREAD;
-        managerRunLoop = CFRunLoopGetCurrent();
-        
-        g_hid_manager = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
-
-        CFMutableArrayRef matcher = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-        append_matching_dictionary(matcher, kHIDPage_GenericDesktop, kHIDUsage_GD_Joystick);
-        append_matching_dictionary(matcher, kHIDPage_GenericDesktop, kHIDUsage_GD_GamePad);
-
-        IOHIDManagerSetDeviceMatchingMultiple(g_hid_manager, matcher);
-        CFRelease(matcher);
-
-        IOHIDManagerRegisterDeviceMatchingCallback(g_hid_manager, DeviceAttached, 0);
-        IOHIDManagerScheduleWithRunLoop(g_hid_manager, managerRunLoop, kCFRunLoopCommonModes);
-
-        IOHIDManagerOpen(g_hid_manager, kIOHIDOptionsTypeNone);
-
-        CFRunLoopRun();
-
-        IOHIDManagerClose(g_hid_manager, kIOHIDOptionsTypeNone);
-        IOHIDManagerUnscheduleFromRunLoop(g_hid_manager, managerRunLoop, kCFRunLoopCommonModes);
-      
-        CFRelease(g_hid_manager);
-        return 0;    
     }
 }

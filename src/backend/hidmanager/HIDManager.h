@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include <CoreFoundation/CFRunLoop.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 

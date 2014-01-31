@@ -13,24 +13,22 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "MFiWrapper.h"
+#include "HIDPad.h"
+#include "backend.h"
 
-%hook GCController
 
-+ (void)startWirelessControllerDiscoveryWithCompletionHandler:(void (^)(void))completionHandler
+HIDPad::Interface::Interface(HIDManager::Connection* aConnection) :
+    playerIndex(-1), connection(aConnection)
 {
-    MFiWrapper::StartWirelessControllerDiscovery();
+    connection = aConnection;
 }
 
-+ (void)stopWirelessControllerDiscovery
+HIDPad::Interface::~Interface()
 {
-    MFiWrapper::StopWirelessControllerDiscovery();
+    MFiWrapperBackend::DetachController(this);
 }
 
-+ (NSArray *)controllers
+void HIDPad::Interface::FinalizeConnection()
 {
-    return MFiWrapper::GetControllers();
+    MFiWrapperBackend::AttachController(this);
 }
-
-%end
-

@@ -16,6 +16,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "backend.h"
 #include "wiimote.h"
 
 namespace HIDManager
@@ -25,13 +26,6 @@ namespace HIDManager
 
 namespace HIDPad
 {
-    class Listener
-    {
-        public:            
-            virtual void SetButtons(uint32_t aFirst, uint32_t aCount, float* aValues) = 0;
-            virtual void SetAxes(uint32_t aFirst, uint32_t aCount, float* aValues) = 0;
-    };
-
     class Interface
     {
         public:
@@ -39,9 +33,6 @@ namespace HIDPad
         
             Interface(HIDManager::Connection* aConnection);
             virtual ~Interface();
-            
-            void SetListener(Listener* aListener) { listener = aListener; }        
-            Listener* GetListener() { return listener; }
 
             HIDManager::Connection* GetConnection() { return connection; }
 
@@ -57,8 +48,6 @@ namespace HIDPad
 
             int32_t playerIndex;
             HIDManager::Connection* connection;
-            
-            Listener* listener;
     };
     
     class Playstation3 : public Interface
@@ -68,9 +57,6 @@ namespace HIDPad
             virtual void SetPlayerIndex(int32_t aIndex);
             virtual void HandlePacket(uint8_t *aData, uint16_t aSize);
             virtual const char* GetVendorName() const;
-
-        private:
-            char data[512];
     };
 
     class WiiMote : public Interface

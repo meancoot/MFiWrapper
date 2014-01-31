@@ -13,22 +13,37 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "HIDPad.h"
-#include "MFiWrapper.h"
+#pragma once
 
-
-HIDPad::Interface::Interface(HIDManager::Connection* aConnection) :
-    playerIndex(-1), connection(aConnection), listener(0)
+typedef struct ConnectionOpenPacket
 {
-    connection = aConnection;
-}
+    char VendorName[256];
+    uint32_t PresentControls;
+    uint32_t AnalogControls;
+}   ConnectionOpenPacket;
 
-HIDPad::Interface::~Interface()
+typedef struct ConnectionClosedPacket
 {
-    MFiWrapper::DetachController(this);
-}
+    int dummy;
+}   ConnectionClosedPacket;
 
-void HIDPad::Interface::FinalizeConnection()
+typedef struct StatePacket
 {
-    MFiWrapper::AttachController(this);
-}
+    float Data[32];
+}   StatePacket;
+
+typedef enum PacketType { PKT_OPEN, PKT_CLOSE, PKT_STATE } PacketName;
+
+typedef struct DataPacket
+{
+    uint32_t Size;
+    PacketType Type;
+    uint32_t Handle;
+    
+    union
+    {
+        ConnectionOpenPacket Open;
+        ConnectionClosedPacket Closed;
+        StatePacket State;
+    };
+}   DataPacket;

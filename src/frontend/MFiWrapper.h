@@ -15,11 +15,6 @@
 
 #pragma once
 
-#include "hidpad/HIDPad.h"
-
-void attach_tweak_controller(HIDPad::Interface* aInterface);
-void detach_tweak_controller(HIDPad::Interface* aInterface);
-
 enum MFiButtons
 {
     MFi_A, MFi_B, MFi_X, MFi_Y, MFi_LeftShoulder, MFi_RightShoulder,
@@ -29,25 +24,9 @@ enum MFiButtons
     MFi_LastButton
 };
 
-// These MFiWrapper functions need to be exposed to C++ code.
-namespace MFiWrapper
-{
-    void AttachController(HIDPad::Interface* aInterface);
-    void DetachController(HIDPad::Interface* aInterface);
-}
-
 #ifdef __OBJC__
 
 #include <Foundation/Foundation.h>
-
-// These MFiWrapper functions do not need to be exposed to C++ code.
-namespace MFiWrapper
-{
-    void Startup();
-    NSArray* GetControllers();
-    void StartWirelessControllerDiscovery();
-    void StopWirelessControllerDiscovery();
-}
 
 #define GCController                GCControllerTweak
 #define GCGamepad                   GCGamepadTweak
@@ -85,8 +64,8 @@ enum { GCControllerPlayerIndexUnset = -1 };
 
 @property(nonatomic, retain) NSMutableArray* tweakButtons;
 @property(nonatomic, retain) NSMutableArray* tweakAxis;
-@property(nonatomic) HIDPad::Interface* tweakHIDPad;
-+ (GCController*)controllerForHIDPad:(HIDPad::Interface*)hidpad;
+//@property(nonatomic) HIDPad::Interface* tweakHIDPad;
+//+ (GCController*)controllerForHIDPad:(HIDPad::Interface*)hidpad;
 
 @end
 

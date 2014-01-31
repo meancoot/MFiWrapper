@@ -13,10 +13,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <CoreFoundation/CFRunLoop.h>
-
 #include <stdio.h>
-#include <pthread.h>
 #include <assert.h>
 #include <set>
 
@@ -28,23 +25,17 @@ namespace HIDManager
 {
 #ifndef NDEBUG
     #define BTPAD_LOG(...) printf(__VA_ARGS__)
-    #define ASSERT_THREAD assert(pthread_equal(btstackThread, pthread_self()))
 #else
     #define BTPAD_LOG(...)
-    #define ASSERT_THREAD
 #endif
 
     bool inquiry_off;
     bool inquiry_running;
 
-    pthread_t btstackThread;
-    CFRunLoopRef btstackRunLoop;
-
     enum { BTPAD_EMPTY, BTPAD_CONNECTING, BTPAD_CONNECTED };
 
     std::set<Connection*> Connections;
 
-    void* BTstackThreadFunction(void* unused);
     void BTstackPacketHandler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 
 
@@ -61,16 +52,14 @@ namespace HIDManager
     
         Connection() : state(BTPAD_EMPTY), handle(0), hasAddress(false),
                        hidpad(0)
-        {
-            ASSERT_THREAD;        
+        {        
             memset(address, 0, sizeof(address));
             memset(channels, 0, sizeof(channels));
             Connections.insert(this);
         }
     
         ~Connection()
-        {
-            ASSERT_THREAD;        
+        {        
             if (handle)
                 btpad_queue_hci_disconnect(handle, 0x15);
             Connections.erase(this);
@@ -78,14 +67,12 @@ namespace HIDManager
         
         void SetAddress(bd_addr_t aAddress)
         {
-            ASSERT_THREAD;
             memcpy(address, aAddress, sizeof(bd_addr_t));
             hasAddress = true;
         }
         
         bool Equals(uint16_t aHandle, bd_addr_t aAddress)
         {
-            ASSERT_THREAD;
             if (!handle && !address)
                 return false;
             else if (aHandle && handle && handle != aHandle)
@@ -99,8 +86,10 @@ namespace HIDManager
         
     void StartUp()
     {
-        if (!btstackThread)
-            pthread_create(&btstackThread, 0, BTstackThreadFunction, 0);  
+        run_loop_init(RUN_LOOP_COCOA);
+        bt_open();
+        bt_register_packet_handler(BTstackPacketHandler);
+        bt_send_cmd(&btstack_set_power_mode, HCI_POWER_ON);
     }
     
     void ShutDown()
@@ -110,53 +99,26 @@ namespace HIDManager
     
     void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize)
     {
-        if (btstackRunLoop == CFRunLoopGetCurrent())
-            bt_send_l2cap(aConnection->channels[0], aData, aSize);
-        else if (btstackRunLoop)
-        {
-            // (TODO) THREADING: What if aConnection is deleted before
-            //                   the block is run? Maybe the block can
-            //                   check if aConnection is present in the
-            //                   Connections set before running.
-            uint8_t* data = new uint8_t[aSize];
-            memcpy(data, aData, aSize);
-
-            CFRunLoopPerformBlock(btstackRunLoop, kCFRunLoopCommonModes, ^{
-                bt_send_l2cap(aConnection->channels[0], data, aSize);
-                delete[] data;
-            });
-            CFRunLoopWakeUp(btstackRunLoop);
-        }
+        bt_send_l2cap(aConnection->channels[0], aData, aSize);
     }
     
     void StartDeviceProbe()
     {
-        if (!btstackRunLoop)
-            return;
-    
-        CFRunLoopPerformBlock(btstackRunLoop, kCFRunLoopCommonModes, ^{
-            inquiry_off = false;
+        inquiry_off = false;
             
-            if (!inquiry_running)
-                btpad_queue_hci_inquiry(HCI_INQUIRY_LAP, 3, 1);
-        });
+        if (!inquiry_running)
+            btpad_queue_hci_inquiry(HCI_INQUIRY_LAP, 3, 1);
     }
     
     void StopDeviceProbe()
     {
-        if (!btstackRunLoop)
-            return;
-    
-        CFRunLoopPerformBlock(btstackRunLoop, kCFRunLoopCommonModes, ^{
-            inquiry_off = true;
-        });
+        inquiry_off = true;
     }
 
     //
     
     Connection* FindConnection(uint16_t handle, bd_addr_t address)
     {
-        ASSERT_THREAD;
         for (std::set<Connection*>::iterator i = Connections.begin(); i != Connections.end(); i ++)
             if ((*i)->Equals(handle, address))
                 return *i;
@@ -166,24 +128,10 @@ namespace HIDManager
     
     void CloseAllConnections()
     {
-        ASSERT_THREAD;
         while (Connections.size())
             delete *Connections.begin();
     }    
-    
-    void* BTstackThreadFunction(void* unused)
-    {
-        ASSERT_THREAD;    
-        run_loop_init(RUN_LOOP_COCOA);
-        btstackRunLoop = CFRunLoopGetCurrent();        
-        bt_open();
-        bt_register_packet_handler(BTstackPacketHandler);
-        bt_send_cmd(&btstack_set_power_mode, HCI_POWER_ON);
-        CFRunLoopRun();
-    
-        return 0;    
-    }
-    
+        
     void BTstackPacketHandler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size)
     {
        bd_addr_t event_addr;
@@ -211,7 +159,6 @@ namespace HIDManager
                   
                    case HCI_STATE_HALTING:
                       CloseAllConnections();
-                      CFRunLoopStop(CFRunLoopGetCurrent());
                       break;                  
                 }
              }

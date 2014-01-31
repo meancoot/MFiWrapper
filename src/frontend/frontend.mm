@@ -1,18 +1,40 @@
-#include <dispatch/dispatch.h>
+#import <CoreFoundation/CoreFoundation.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#include "frontend.h"
 #include "MFiWrapper.h"
-#include "HIDManager.h"
 
-static NSMutableArray* controllers;
+extern int HACKStart();
+namespace MFiWrapperFrontend {
 
-void MFiWrapper::Startup()
+int _socketFD;
+CFSocketRef _socket;
+CFRunLoopSourceRef _socketSource;
+NSMutableArray* controllers;
+
+void HandleSocketEvent(CFSocketRef s, CFSocketCallBackType callbackType,
+                       CFDataRef address, const void *data, void *info)
+{
+    printf("DATA\n");
+}
+
+void Startup()
 {
     if (!controllers)
-    {
         controllers = [[NSMutableArray array] retain];
-        HIDManager::StartUp();
+
+    if (!_socket)
+    {
+        _socketFD = HACKStart();
+
+        _socket = CFSocketCreateWithNative(0, _socketFD, kCFSocketDataCallBack, HandleSocketEvent, 0);
+        _socketSource = CFSocketCreateRunLoopSource(0, _socket, 0);
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), _socketSource, kCFRunLoopCommonModes);
     }
 }
 
+/*
 void MFiWrapper::AttachController(HIDPad::Interface* aInterface)
 {
     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -25,7 +47,7 @@ void MFiWrapper::AttachController(HIDPad::Interface* aInterface)
 void MFiWrapper::DetachController(HIDPad::Interface* aInterface)
 {
     dispatch_sync(dispatch_get_main_queue(), ^{
-        for (int i = 0; i != [controllers count]; i ++)
+        for (unsigned i = 0; i < [controllers count]; i ++)
         {
             GCController* tweak = controllers[i];
     
@@ -35,25 +57,27 @@ void MFiWrapper::DetachController(HIDPad::Interface* aInterface)
                 [controllers removeObjectAtIndex:i];
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
                 [tweak release];
+                return;
             }
         }
     });
 }
+*/
 
-NSArray* MFiWrapper::GetControllers()
+NSArray* GetControllers()
 {
     Startup();
     return controllers;
 }
 
-void MFiWrapper::StartWirelessControllerDiscovery()
+void StartWirelessControllerDiscovery()
 {
     Startup();
-    HIDManager::StartDeviceProbe();
 }
 
-void MFiWrapper::StopWirelessControllerDiscovery()
+void StopWirelessControllerDiscovery()
 {
     Startup();
-    HIDManager::StopDeviceProbe();
+}
+
 }

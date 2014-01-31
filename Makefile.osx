@@ -1,14 +1,16 @@
-OBJECTS = src/MFiWrapper.o \
-          src/GCController_Hook_OSX.o \
-          src/GCController.o \
-          src/hidmanager/HIDManager_OSX.o \
-          src/hidpad/wiimote.o \
-          src/hidpad/HIDPad_Interface.o \
-          src/hidpad/HIDPad_Playstation3.o \
-          src/hidpad/HIDPad_WiiMote.o \
-          src/hidpad/HIDPad.o
+OBJECTS = src/frontend/frontend.o \
+          src/frontend/GCController_Hook_OSX.o \
+          \
+          src/backend/backend.o \
+          src/backend/hidmanager/HIDManager_OSX.o \
+          src/backend/hidpad/wiimote.o \
+          src/backend/hidpad/HIDPad_Interface.o \
+          src/backend/hidpad/HIDPad_Playstation3.o \
+          src/backend/hidpad/HIDPad_WiiMote.o \
+          src/backend/hidpad/HIDPad.o
 
-CXXFLAGS += -std=c++11 -Isrc -Isrc/hidpad -Isrc/hidmanager
+CXXFLAGS += -std=c++11 -Iinclude -Isrc/frontend
+CXXFLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
 LDFLAGS += -framework CoreFoundation -framework IOKit -framework Foundation -dynamiclib
 
 %.o: %.mm

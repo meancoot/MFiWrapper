@@ -24,8 +24,6 @@
 
 HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection) : Interface(aConnection)
 {
-    memset(data, 0, sizeof(data));
-
 #ifdef IOS
     // Magic packet to start reports
     static uint8_t data[] = {0x53, 0xF4, 0x42, 0x03, 0x00, 0x00};
@@ -64,13 +62,8 @@ void HIDPad::Playstation3::SetPlayerIndex(int32_t aIndex)
 }
 
 void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
-{
-    memcpy(data, aData, aSize);
-    
-    if (!listener)
-        return;
-
-    uint32_t buttons = data[3] | (data[4] << 8) | ((data[5] & 1) << 16);
+{    
+    uint32_t buttons = aData[3] | (aData[4] << 8) | ((aData[5] & 1) << 16);
     static const uint32_t button_mapping[17] = 
     {
         0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
@@ -79,12 +72,12 @@ void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
         MFi_Y, MFi_B, MFi_A, MFi_X, 0xFFFFFFFF
     };
     
-    float data[MFi_LastButton];
+    float data[32];
     memset(data, 0, sizeof(data));
     
     for (int i = 0; ARRAY_SIZE(button_mapping); i ++)
         data[i] = (buttons & (1 << button_mapping[i])) ? 1.0f : 0.0f;
-    listener->SetButtons(0, MFi_LastButton, data);
+    MFiWrapperBackend::SendControllerState(this, data);
 }
 
 const char* HIDPad::Playstation3::GetVendorName() const

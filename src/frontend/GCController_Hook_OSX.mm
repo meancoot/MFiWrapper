@@ -16,6 +16,7 @@
 #include <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
+#include "frontend.h"
 #include "MFiWrapper.h"
 
 @interface GCControllerHook : NSObject @end
@@ -41,17 +42,17 @@
 
 + (void)startWirelessControllerDiscoveryWithCompletionHandler:(void (^)(void))completionHandler
 {
-    MFiWrapper::StartWirelessControllerDiscovery();
+    MFiWrapperFrontend::StartWirelessControllerDiscovery();
 }
 
 + (void)stopWirelessControllerDiscovery
 {
-    MFiWrapper::StopWirelessControllerDiscovery();
+    MFiWrapperFrontend::StopWirelessControllerDiscovery();
 }
 
 + (NSArray *)controllers
 {
-    return MFiWrapper::GetControllers();
+    return MFiWrapperFrontend::GetControllers();
 }
 
 @end

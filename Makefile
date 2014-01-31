@@ -1,17 +1,22 @@
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = mfiwrapper
-mfiwrapper_FILES = src/GCController_Hook_iOS.xm \
-                   src/GCController.mm \
-                   src/MFiWrapper.mm \
-                   src/hidmanager/HIDManager_iOS.cpp \
-                   src/hidmanager/btstack_queue.cpp \
-                   src/hidpad/wiimote.cpp \
-                   src/hidpad/HIDPad_Interface.cpp \
-                   src/hidpad/HIDPad_Playstation3.cpp \
-                   src/hidpad/HIDPad_WiiMote.cpp \
-                   src/hidpad/HIDPad.cpp
-mfiwrapper_CCFLAGS = -std=c++11 -Isrc -Isrc/hidmanager -Isrc/hidpad
+mfiwrapper_FILES =  src/frontend/frontend.mm \
+                    src/frontend/GCController_Hook_iOS.xm \
+                    \
+                    src/backend/backend.cpp \
+                    src/backend/hidmanager/HIDManager_iOS.cpp \
+                    src/backend/hidmanager/btstack_queue.cpp \
+                    src/backend/hidpad/wiimote.cpp \
+                    src/backend/hidpad/HIDPad_Interface.cpp \
+                    src/backend/hidpad/HIDPad_Playstation3.cpp \
+                    src/backend/hidpad/HIDPad_WiiMote.cpp \
+                    src/backend/hidpad/HIDPad.cpp
+
+mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend
+mfiwrapper_CCFLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
+
+
 mfiwrapper_LDFLAGS = -lBTstack
 
 include $(THEOS_MAKE_PATH)/tweak.mk
