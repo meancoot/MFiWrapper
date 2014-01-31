@@ -78,8 +78,11 @@ void AttachController(HIDPad::Interface* aInterface)
         uint32_t handle = nextHandle ++;
         devices[aInterface] = handle;
 
-        MFiWConnectPacket pkt = { { 0 }, 0xFFFFFFFF, 0 };
-        strlcpy(pkt.VendorName, "Test", sizeof(pkt.VendorName));
+        MFiWConnectPacket pkt;
+        memset(&pkt, 0, sizeof(pkt));
+        strlcpy(pkt.VendorName, aInterface->GetVendorName(), sizeof(pkt.VendorName));
+        pkt.PresentControls = aInterface->GetPresentControls();
+        pkt.AnalogControls = aInterface->GetAnalogControls();
         connection->SendConnect(handle, &pkt);
     }
 }

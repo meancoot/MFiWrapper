@@ -42,6 +42,8 @@ namespace HIDPad
             virtual void HandlePacket(uint8_t *aData, uint16_t aSize) { }
             
             virtual const char* GetVendorName() const { return "Unknown Vendor"; }
+            virtual uint32_t GetPresentControls() const { return 0xFFFFFFFF; }
+            virtual uint32_t GetAnalogControls() const { return 0; }
             
         protected:
             void FinalizeConnection();
@@ -56,7 +58,10 @@ namespace HIDPad
             Playstation3(HIDManager::Connection* aConnection);
             virtual void SetPlayerIndex(int32_t aIndex);
             virtual void HandlePacket(uint8_t *aData, uint16_t aSize);
+
             virtual const char* GetVendorName() const;
+            virtual uint32_t GetPresentControls() const;
+            virtual uint32_t GetAnalogControls() const;
     };
 
     class WiiMote : public Interface
@@ -65,6 +70,7 @@ namespace HIDPad
             WiiMote(HIDManager::Connection* aConnection);             
             virtual void SetPlayerIndex(int32_t aIndex);
             virtual void HandlePacket(uint8_t *aData, uint16_t aSize);
+            
             virtual const char* GetVendorName() const;
 
         private:

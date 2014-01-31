@@ -54,7 +54,7 @@ typedef union
         float LeftStickX;
         float LeftStickY;
         float RightStickX;
-        float RightSitckY;
+        float RightStickY;
     };
 
     float Data[32];

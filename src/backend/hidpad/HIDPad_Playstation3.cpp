@@ -19,19 +19,7 @@
 #include "HIDPad.h"
 #include "protocol.h"
 
-namespace PS3Bits
-{
-    enum
-    {
-        SELECT, LR, R3, START,
-        UP, RIGHT, DOWN, LEFT,
-        L2, R2, L1, R1,
-        TRIANGLE, CIRCLE, CROSS, SQUARE,
-        PS
-    };
-    
-    inline bool Button(int buttons, int button) { return buttons & (1 << button); }
-}
+#include "sicksaxis.h"
 
 HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection) : Interface(aConnection)
 {
@@ -65,39 +53,42 @@ void HIDPad::Playstation3::SetPlayerIndex(int32_t aIndex)
         0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00
     };
-
-    report_buffer[11] = 1 << ((playerIndex % 4) + 1);
+    //report_buffer[11] = 1 << ((playerIndex % 4) + 1);
     //report_buffer[4] = motors[1] >> 8;
     //report_buffer[6] = motors[0] >> 8;
     HIDManager::SendPacket(connection, report_buffer, sizeof(report_buffer));
 }
 
-void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
-{    
-    uint32_t buttons = aData[3] | (aData[4] << 8) | ((aData[5] & 1) << 16);
-    
+void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
+{
+    SS_GAMEPAD* pad = (SS_GAMEPAD*)&aData[1];
+        
     MFiWInputStatePacket data;
     memset(&data, 0, sizeof(data));
     
-    using namespace PS3Bits;
-    data.A             = Button(buttons, CROSS)    ? 1.0f : 0.0f;
-    data.B             = Button(buttons, CIRCLE)   ? 1.0f : 0.0f;
-    data.X             = Button(buttons, SQUARE)   ? 1.0f : 0.0f;
-    data.Y             = Button(buttons, TRIANGLE) ? 1.0f : 0.0f;
-    data.LeftShoulder  = Button(buttons, L1)       ? 1.0f : 0.0f;
-    data.RightShoulder = Button(buttons, R1)       ? 1.0f : 0.0f;
-    data.LeftTrigger   = Button(buttons, L2)       ? 1.0f : 0.0f;
-    data.RightTrigger  = Button(buttons, R2)       ? 1.0f : 0.0f;
+    #define B(X, Y) (((float)pad->X##_sens.Y) / 255.0f)
     
-    if (Button(buttons, UP))
-        data.DPadX = 1.0f;
-    else if (Button(buttons, DOWN))
-        data.DPadX = -1.0f;
-
-    if (Button(buttons, LEFT))
-        data.DPadY = -1.0f;
-    else if (Button(buttons, RIGHT))
-        data.DPadY = 1.0f;
+    data.A             = B(button, cross);
+    data.B             = B(button, circle);
+    data.X             = B(button, square);
+    data.Y             = B(button, triangle);
+    data.LeftShoulder  = B(shoulder, L1);
+    data.RightShoulder = B(shoulder, R1);
+    data.LeftTrigger   = B(shoulder, L2);
+    data.RightTrigger  = B(shoulder, R2);
+    
+    data.DPadX = (B(dpad, left) > 0) ? -B(dpad, left) : B(dpad, right);
+    data.DPadY = (B(dpad, up  ) > 0) ? -B(dpad, up)   : B(dpad, down );
+    
+    uint32_t aval;
+    #define A(X, Y)                               \
+        aval = pad->X + ((pad->X > 128) ? 1 : 0); \
+        Y = ((aval * 2) / 256.0f) - 1.0f;
+        
+    A(left_analog.x,  data.LeftStickX);
+    A(left_analog.y,  data.LeftStickY);
+    A(right_analog.x, data.RightStickX);
+    A(right_analog.y, data.RightStickY);
 
     MFiWrapperBackend::SendControllerState(this, data.Data);
 }
@@ -105,4 +96,18 @@ void HIDPad::Playstation3::HandlePacket(uint8_t *aData, uint16_t aSize)
 const char* HIDPad::Playstation3::GetVendorName() const
 {
     return "SixAxis/DualShock 3";
+}
+
+uint32_t HIDPad::Playstation3::GetPresentControls() const
+{
+    return MFi_A | MFi_B | MFi_X | MFi_Y | MFi_LeftShoulder |
+           MFi_RightShoulder | MFi_LeftTrigger | MFi_RightTrigger |
+           MFi_DPad | MFi_LeftThumbstick | MFi_RightThumbstick;
+}
+
+uint32_t HIDPad::Playstation3::GetAnalogControls() const
+{
+    return MFi_A | MFi_B | MFi_X | MFi_Y | MFi_LeftShoulder |
+           MFi_RightShoulder | MFi_LeftTrigger | MFi_RightTrigger |
+           MFi_DPad | MFi_LeftThumbstick | MFi_RightThumbstick;
 }
