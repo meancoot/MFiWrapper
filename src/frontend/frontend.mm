@@ -3,66 +3,86 @@
 #include <netinet/in.h>
 
 #include "frontend.h"
+#include "common.h"
 #include "MFiWrapper.h"
 
 extern int HACKStart();
 namespace MFiWrapperFrontend {
 
-int _socketFD;
-CFSocketRef _socket;
-CFRunLoopSourceRef _socketSource;
 NSMutableArray* controllers;
 
-void HandleSocketEvent(CFSocketRef s, CFSocketCallBackType callbackType,
-                       CFDataRef address, const void *data, void *info)
+class FrontendConnection : MFiWrapperCommon::Connection
 {
-    printf("DATA\n");
-}
+    public:
+        FrontendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
+        
+        int32_t FindControllerByHandle(uint32_t aHandle)
+        {
+            for (int32_t i = 0; i < [controllers count]; i ++)
+            {
+                GCController* tweak = controllers[i];
+                if (tweak.tweakHandle == aHandle)
+                {
+                    return i;
+                }
+            }
+            
+            return -1;
+        }
+        
+        void AttachController(const MFiWDataPacket* aData)
+        {
+            GCControllerTweak* tweak = [GCControllerTweak controllerForHandle:aData->Handle data:aData->Connect];
+            [controllers addObject:tweak];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];        
+        }
+
+        void DetachController(const MFiWDataPacket* aData)
+        {
+            int32_t idx = FindControllerByHandle(aData->Handle);
+            
+            if (idx < 0)
+                return;
+                
+            GCController* tweak = controllers[idx];
+            [tweak retain];
+            [controllers removeObjectAtIndex:idx];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
+            [tweak release];
+        }
+        
+        void ControllerState(const MFiWDataPacket* aData)
+        {
+            int32_t idx = FindControllerByHandle(aData->Handle);
+            
+            if (idx < 0)
+                return;
+
+            GCController* tweak = controllers[idx];
+            [tweak tweakUpdateButtons:aData->State.Data];
+        }
+        
+        void HandlePacket(const MFiWDataPacket* aPacket)
+        {
+            switch(aPacket->Type)
+            {
+                case MFiWPacketConnect:     AttachController(aPacket); break;
+                case MFiWPacketDisconnect:  DetachController(aPacket); break;
+                case MFiWPacketInputState:  ControllerState (aPacket);  break;
+            }        
+        }
+};
+
+FrontendConnection* connection;
 
 void Startup()
 {
     if (!controllers)
         controllers = [[NSMutableArray array] retain];
 
-    if (!_socket)
-    {
-        _socketFD = HACKStart();
-
-        _socket = CFSocketCreateWithNative(0, _socketFD, kCFSocketDataCallBack, HandleSocketEvent, 0);
-        _socketSource = CFSocketCreateRunLoopSource(0, _socket, 0);
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), _socketSource, kCFRunLoopCommonModes);
-    }
+    if (!connection)
+        connection = new FrontendConnection(HACKStart());
 }
-
-/*
-void MFiWrapper::AttachController(HIDPad::Interface* aInterface)
-{
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        GCControllerTweak* tweak = [GCControllerTweak controllerForHIDPad:aInterface];
-        [controllers addObject:tweak];
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];        
-    });
-}
-
-void MFiWrapper::DetachController(HIDPad::Interface* aInterface)
-{
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        for (unsigned i = 0; i < [controllers count]; i ++)
-        {
-            GCController* tweak = controllers[i];
-    
-            if (tweak.tweakHIDPad == aInterface)
-            {
-                [tweak retain];
-                [controllers removeObjectAtIndex:i];
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
-                [tweak release];
-                return;
-            }
-        }
-    });
-}
-*/
 
 NSArray* GetControllers()
 {

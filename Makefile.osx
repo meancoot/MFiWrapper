@@ -1,4 +1,6 @@
-OBJECTS = src/frontend/frontend.o \
+OBJECTS = src/common.o \
+          \
+          src/frontend/frontend.o \
           src/frontend/GCController_Hook_OSX.o \
           src/frontend/MFiWrapper.o \
           \
@@ -10,10 +12,10 @@ OBJECTS = src/frontend/frontend.o \
           src/backend/hidpad/HIDPad_WiiMote.o \
           src/backend/hidpad/HIDPad.o
 
-CXXFLAGS += -std=c++11 -Iinclude
-FRONTEND_FLAGS += -Isrc/frontend
- BACKEND_FLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
-LDFLAGS += -framework CoreFoundation -framework IOKit -framework Foundation -dynamiclib
+CXXFLAGS        += -std=c++11 -Iinclude -Isrc
+FRONTEND_FLAGS  += -Isrc/frontend
+BACKEND_FLAGS   += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
+LDFLAGS         += -framework CoreFoundation -framework IOKit -framework Foundation -dynamiclib
 
 src/frontend/%.o: src/frontend/%.cpp
 	$(CXX) $(CXXFLAGS) $(FRONTEND_FLAGS) -c $< -o $@

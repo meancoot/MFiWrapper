@@ -65,13 +65,13 @@ void AttachController(HIDPad::Interface* aInterface)
         uint32_t handle = nextHandle ++;
         devices[aInterface] = handle;
         
-        DataPacket pkt;
-        pkt.Size = sizeof(DataPacket);
-        pkt.Type = PKT_OPEN;
+        MFiWDataPacket pkt;
+        pkt.Size = sizeof(MFiWDataPacket);
+        pkt.Type = MFiWPacketConnect;
         pkt.Handle = handle;
-        strlcpy(pkt.Open.VendorName, "Test", sizeof(pkt.Open.VendorName));
-        pkt.Open.PresentControls = 0xFFFFFFFF;
-        pkt.Open.AnalogControls = 0;
+        strlcpy(pkt.Connect.VendorName, "Test", sizeof(pkt.Connect.VendorName));
+        pkt.Connect.PresentControls = 0xFFFFFFFF;
+        pkt.Connect.AnalogControls = 0;
         write(sockets[0], &pkt, pkt.Size);
     }
 }
@@ -84,9 +84,9 @@ void DetachController(HIDPad::Interface* aInterface)
         uint32_t handle = device->second;
         devices.erase(device);
         
-        DataPacket pkt;
-        pkt.Size = sizeof(DataPacket);
-        pkt.Type = PKT_CLOSE;
+        MFiWDataPacket pkt;
+        pkt.Size = sizeof(MFiWDataPacket);
+        pkt.Type = MFiWPacketDisconnect;
         pkt.Handle = handle;
         write(sockets[0], &pkt, pkt.Size);
     }
@@ -99,9 +99,9 @@ void SendControllerState(HIDPad::Interface* aInterface, const float aData[32])
     {
         uint32_t handle = device->second;
         
-        DataPacket pkt;
-        pkt.Size = sizeof(DataPacket);
-        pkt.Type = PKT_STATE;
+        MFiWDataPacket pkt;
+        pkt.Size = sizeof(MFiWDataPacket);
+        pkt.Type = MFiWPacketInputState;
         pkt.Handle = handle;
         memcpy(pkt.State.Data, aData, sizeof(pkt.State.Data));
         write(sockets[0], &pkt, pkt.Size);
