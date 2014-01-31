@@ -20,17 +20,17 @@
 
 + (void)startWirelessControllerDiscoveryWithCompletionHandler:(void (^)(void))completionHandler
 {
-    StartWirelessControllerDiscovery();
+    MFiWrapperFrontend::StartWirelessControllerDiscovery();
 }
 
 + (void)stopWirelessControllerDiscovery
 {
-    StopWirelessControllerDiscovery();
+    MFiWrapperFrontend::StopWirelessControllerDiscovery();
 }
 
 + (NSArray *)controllers
 {
-    return GetControllers();
+    return MFiWrapperFrontend::GetControllers();
 }
 
 %end

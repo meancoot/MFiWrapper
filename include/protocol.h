@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include <stdint.h>
-
 typedef enum MFiButtons
 {
     MFi_A, MFi_B, MFi_X, MFi_Y, MFi_LeftShoulder, MFi_RightShoulder,
@@ -43,7 +41,7 @@ typedef struct StatePacket
     float Data[32];
 }   StatePacket;
 
-typedef enum PacketType { PKT_OPEN, PKT_CLOSE, PKT_STATE } PacketType;
+typedef enum PacketType { PKT_OPEN, PKT_CLOSE, PKT_STATE } PacketName;
 
 typedef struct DataPacket
 {
