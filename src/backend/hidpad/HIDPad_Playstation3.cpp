@@ -53,7 +53,7 @@ void HIDPad::Playstation3::SetPlayerIndex(int32_t aIndex)
         0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00
     };
-    //report_buffer[11] = 1 << ((playerIndex % 4) + 1);
+    report_buffer[11] = 1 << ((playerIndex % 4) + 1);
     //report_buffer[4] = motors[1] >> 8;
     //report_buffer[6] = motors[0] >> 8;
     HIDManager::SendPacket(connection, report_buffer, sizeof(report_buffer));
