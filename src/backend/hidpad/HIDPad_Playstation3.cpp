@@ -90,7 +90,7 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     A(right_analog.x, data.RightStickX);
     A(right_analog.y, data.RightStickY);
 
-    MFiWrapperBackend::SendControllerState(this, data.Data);
+    MFiWrapperBackend::SendControllerState(this, &data);
 }
 
 const char* HIDPad::Playstation3::GetVendorName() const
@@ -100,14 +100,16 @@ const char* HIDPad::Playstation3::GetVendorName() const
 
 uint32_t HIDPad::Playstation3::GetPresentControls() const
 {
-    return MFi_A | MFi_B | MFi_X | MFi_Y | MFi_LeftShoulder |
-           MFi_RightShoulder | MFi_LeftTrigger | MFi_RightTrigger |
-           MFi_DPad | MFi_LeftThumbstick | MFi_RightThumbstick;
+    return MFi_A_Bit | MFi_B_Bit | MFi_X_Bit | MFi_Y_Bit |
+           MFi_LeftShoulder_Bit | MFi_RightShoulder_Bit |
+           MFi_LeftTrigger_Bit | MFi_RightTrigger_Bit |
+           MFi_DPad_Bit | MFi_LeftThumbstick_Bit | MFi_RightThumbstick_Bit;
 }
 
 uint32_t HIDPad::Playstation3::GetAnalogControls() const
 {
-    return MFi_A | MFi_B | MFi_X | MFi_Y | MFi_LeftShoulder |
-           MFi_RightShoulder | MFi_LeftTrigger | MFi_RightTrigger |
-           MFi_DPad | MFi_LeftThumbstick | MFi_RightThumbstick;
+    return MFi_A_Bit | MFi_B_Bit | MFi_X_Bit | MFi_Y_Bit |
+           MFi_LeftShoulder_Bit | MFi_RightShoulder_Bit |
+           MFi_LeftTrigger_Bit | MFi_RightTrigger_Bit |
+           MFi_DPad_Bit | MFi_LeftThumbstick_Bit | MFi_RightThumbstick_Bit;
 }

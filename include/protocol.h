@@ -19,14 +19,25 @@
 
 typedef enum
 {
-    MFi_A,              MFi_B,
-    MFi_X,              MFi_Y,
-    MFi_LeftShoulder,   MFi_RightShoulder,
-    MFi_LeftTrigger,    MFi_RightTrigger,
-    MFi_LastButton,     MFi_DPad = MFi_LastButton,
-    MFi_LeftThumbstick, MFi_RightThumbstick,
-    MFi_LastDPad,       MFi_LastInput = MFi_LastDPad
+    MFi_DPad,               MFi_A,
+    MFi_B,                  MFi_X,
+    MFi_Y,                  MFi_LeftShoulder,
+    MFi_RightShoulder,      MFi_LeftThumbstick,
+    MFi_RightThumbstick,    MFi_LeftTrigger,
+    MFi_RightTrigger,       MFi_LastElement
 }   MFiButtons;
+
+typedef enum
+{
+#define DEFBIT(X) MFi_##X##_Bit = (1 << MFi_X)
+
+    DEFBIT(DPad),               DEFBIT(A),
+    DEFBIT(B),                  DEFBIT(X),
+    DEFBIT(Y),                  DEFBIT(LeftShoulder),
+    DEFBIT(RightShoulder),      DEFBIT(LeftThumbstick),
+    DEFBIT(RightThumbstick),    DEFBIT(LeftTrigger),
+    DEFBIT(RightTrigger)
+}   MFiButtonMask;
 
 #pragma pack(push, 1)
 
@@ -37,27 +48,28 @@ typedef struct
     uint32_t AnalogControls;
 }   MFiWConnectPacket;
 
-typedef union
+typedef struct
 {
-    struct
-    {
-        float A;
-        float B;
-        float X;
-        float Y;
-        float LeftShoulder;
-        float RightShoulder;
-        float LeftTrigger;
-        float RightTrigger;
-        float DPadX;
-        float DPadY;
-        float LeftStickX;
-        float LeftStickY;
-        float RightStickX;
-        float RightStickY;
-    };
+    // NOTE: This structure is laid out deliberately to mimic the
+    //       expected layout of GCGamepadSnapshot's data.
+    float DPadX;
+    float DPadY;
 
-    float Data[32];
+    float A;
+    float B;
+    float X;
+    float Y;
+    float LeftShoulder;
+    float RightShoulder;
+
+    // Extended Gamepad
+    float LeftStickX;
+    float LeftStickY;
+    float RightStickX;
+    float RightStickY;
+
+    float LeftTrigger;
+    float RightTrigger;
 }   MFiWInputStatePacket;
 
 typedef struct

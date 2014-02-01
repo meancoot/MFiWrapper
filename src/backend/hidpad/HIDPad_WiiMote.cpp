@@ -102,7 +102,7 @@ void HIDPad::WiiMote::ProcessButtons()
          if (B(LEFT))      data.DPadY = -1.0f;
     else if (B(RIGHT))     data.DPadY =  1.0f;
 
-    MFiWrapperBackend::SendControllerState(this, data.Data);
+    MFiWrapperBackend::SendControllerState(this, &data);
 }
 
 const char* HIDPad::WiiMote::GetVendorName() const

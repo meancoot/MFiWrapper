@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include "protocol.h"
+
 namespace HIDPad {
 
 class Interface;
@@ -25,6 +27,6 @@ namespace MFiWrapperBackend {
 
 void AttachController(HIDPad::Interface* aInterface);
 void DetachController(HIDPad::Interface* aInterface);
-void SendControllerState(HIDPad::Interface* aInterface, const float aData[32]);
+void SendControllerState(HIDPad::Interface* aInterface, const MFiWInputStatePacket* aData);
 
 }

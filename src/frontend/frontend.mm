@@ -59,7 +59,7 @@ class FrontendConnection : public MFiWrapperCommon::Connection
                 return;
 
             GCController* tweak = controllers[idx];
-            [tweak tweakUpdateButtons:aData->State.Data];
+            [tweak tweakUpdateButtons:&aData->State];
         }
         
         void HandlePacket(const MFiWDataPacket* aPacket)

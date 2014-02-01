@@ -99,16 +99,13 @@ void DetachController(HIDPad::Interface* aInterface)
     }
 }
 
-void SendControllerState(HIDPad::Interface* aInterface, const float aData[32])
+void SendControllerState(HIDPad::Interface* aInterface, const MFiWInputStatePacket* aData)
 {
     std::map<HIDPad::Interface*, uint32_t>::iterator device;
     if ((device = devices.find(aInterface)) != devices.end())
     {
         uint32_t handle = device->second;
-        
-        MFiWInputStatePacket pkt;
-        memcpy(pkt.Data, aData, sizeof(pkt.Data));
-        connection->SendInputState(handle, &pkt);
+        connection->SendInputState(handle, aData);
     }
 }
 

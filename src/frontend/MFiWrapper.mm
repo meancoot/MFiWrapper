@@ -28,16 +28,22 @@
     tweak.tweakHandle = handle;
     tweak.vendorName = [NSString stringWithUTF8String:data.VendorName];
 
-    tweak.tweakElements = [NSMutableArray array];
-    for (unsigned i = 0; i < MFi_LastInput; i ++)
-    {
-        GCControllerElement* element = (i < MFi_LastButton)
-                    ? [GCControllerButtonInput button]
-                    : [GCControllerDirectionPad dpad];
+    #define ANALOG_TEST(X) analog:((data.AnalogControls & MFi_##X##_Bit) ? YES : NO)
+    #define DPAD(X)   [GCControllerDirectionPad dpadWithParent:nil ANALOG_TEST(X)]
+    #define BUTTON(X) [GCControllerButtonInput buttonWithParent:nil ANALOG_TEST(X)]
 
-        element.analog = (data.AnalogControls & (1 << i)) ? YES : NO;
-        [tweak.tweakElements addObject:element];
-    }
+    tweak.tweakElements = [NSArray arrayWithObjects:
+        // GCGamepad
+        DPAD(DPad), BUTTON(A), BUTTON(B), BUTTON(X), BUTTON(Y),
+        BUTTON(LeftShoulder), BUTTON(RightShoulder),
+        DPAD(LeftThumbstick), DPAD(RightThumbstick),
+        BUTTON(LeftTrigger), BUTTON(RightTrigger),
+        nil
+    ];
+    
+    #undef DPAD
+    #undef BUTTON
+    #undef ANALOG_TEST
 
     tweak.gamepad = [GCGamepad gamepadForController:tweak];
     tweak.extendedGamepad = [GCExtendedGamepad gamepadForController:tweak];
@@ -57,10 +63,11 @@
     [super dealloc];
 }
 
-- (void)tweakUpdateButtons:(const float*)data
+- (void)tweakUpdateButtons:(const MFiWInputStatePacket*)data;
 {   
+    const float* buf = (float*)data;
     for(GCControllerElement* i in self.tweakElements)
-        data += [i tweakSetValues:data];
+        buf += [i tweakSetValues:buf];
 }
 
 - (void)setPlayerIndex:(NSInteger)index
@@ -171,11 +178,14 @@
 /***************************/
 /* GCControllerButtonInput */
 /***************************/
-@implementation GCControllerButtonInput : GCControllerElement
+@implementation GCControllerButtonInput
 
-+ (GCControllerButtonInput*)button
++ (GCControllerButtonInput*)buttonWithParent:(GCControllerElement*)parent analog:(BOOL)isAnalog
 {
-    return [[GCControllerButtonInput new] autorelease];
+    GCControllerButtonInput* tweak = [GCControllerButtonInput new];
+    tweak.collection = parent;
+    tweak.analog = isAnalog;
+    return [tweak autorelease];
 }
 
 - (void)dealloc
@@ -209,9 +219,12 @@
 /*************************/
 @implementation GCControllerAxisInput
 
-+ (GCControllerAxisInput*)axis
++ (GCControllerAxisInput*)axisWithParent:(GCControllerElement*)parent analog:(BOOL)isAnalog
 {
-    return [[GCControllerAxisInput new] autorelease];
+    GCControllerAxisInput* tweak = [GCControllerAxisInput new];
+    tweak.collection = parent;
+    tweak.analog = isAnalog;
+    return [tweak autorelease];
 }
 
 - (void)dealloc
@@ -242,29 +255,21 @@
 /****************************/
 /* GCControllerDirectionPad */
 /****************************/
-@implementation GCControllerDirectionPad : GCControllerElement
+@implementation GCControllerDirectionPad
 
-+ (GCControllerDirectionPad*)dpad
++ (GCControllerDirectionPad*)dpadWithParent:(GCControllerElement*)parent analog:(BOOL)isAnalog
 {
     GCControllerDirectionPad* tweak = [GCControllerDirectionPad new];
+    tweak.collection = parent;
+    tweak.analog = isAnalog;
 
-    tweak.xAxis = [GCControllerAxisInput axis];
-    tweak.xAxis.collection = tweak;
-    
-    tweak.yAxis = [GCControllerAxisInput axis];
-    tweak.yAxis.collection = tweak;
+    tweak.xAxis = [GCControllerAxisInput axisWithParent:tweak analog:isAnalog];
+    tweak.yAxis = [GCControllerAxisInput axisWithParent:tweak analog:isAnalog];
 
-    tweak.up = [GCControllerButtonInput button];
-    tweak.up.collection = tweak;
-    
-    tweak.down = [GCControllerButtonInput button];
-    tweak.down.collection = tweak;
-    
-    tweak.left = [GCControllerButtonInput button];
-    tweak.left.collection = tweak;
-    
-    tweak.right = [GCControllerButtonInput button];
-    tweak.right.collection = tweak;
+    tweak.up = [GCControllerButtonInput buttonWithParent:tweak analog:isAnalog];
+    tweak.down = [GCControllerButtonInput buttonWithParent:tweak analog:isAnalog];
+    tweak.left = [GCControllerButtonInput buttonWithParent:tweak analog:isAnalog];
+    tweak.right = [GCControllerButtonInput buttonWithParent:tweak analog:isAnalog];
 
     return [tweak autorelease];
 }
