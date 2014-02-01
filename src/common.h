@@ -33,10 +33,12 @@ class Connection
         void SendStartDiscovery();
         void SendStopDiscovery();
         void SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex);
+        void SendPausePressed(uint32_t aHandle);
 
         virtual void HandlePacket(const MFiWDataPacket* aPacket) = 0;
 
     private:
+        void SendGenericPacket(MFiWPacketType aType, uint32_t aHandle = 0);
         bool Read();
         void Parse();    
         static void Callback(CFSocketRef s, CFSocketCallBackType callbackType,

@@ -60,11 +60,7 @@ void Connection::SendConnect(uint32_t aHandle, const MFiWConnectPacket* aData)
 
 void Connection::SendDisconnect(uint32_t aHandle)
 {
-    MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER;
-    pkt.Type = MFiWPacketDisconnect;
-    pkt.Handle = aHandle;
-    write(Descriptor, &pkt, pkt.Size);
+    SendGenericPacket(MFiWPacketDisconnect, aHandle);
 }
 
 void Connection::SendInputState(uint32_t aHandle, const MFiWInputStatePacket* aData)
@@ -79,18 +75,12 @@ void Connection::SendInputState(uint32_t aHandle, const MFiWInputStatePacket* aD
 
 void Connection::SendStartDiscovery()
 {
-    MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER;
-    pkt.Type = MFiWPacketStartDiscovery;
-    write(Descriptor, &pkt, pkt.Size);
+    SendGenericPacket(MFiWPacketStartDiscovery);
 }
 
 void Connection::SendStopDiscovery()
 {
-    MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER;
-    pkt.Type = MFiWPacketStopDiscovery;
-    write(Descriptor, &pkt, pkt.Size);
+    SendGenericPacket(MFiWPacketStopDiscovery);
 }
 
 void Connection::SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex)
@@ -100,6 +90,20 @@ void Connection::SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex)
     pkt.Type = MFiWPacketSetPlayerIndex;
     pkt.Handle = aHandle;
     pkt.PlayerIndex.Value = aIndex;
+    write(Descriptor, &pkt, pkt.Size);
+}
+
+void Connection::SendPausePressed(uint32_t aHandle)
+{
+    SendGenericPacket(MFiWPacketPausePressed, aHandle);
+}
+
+void Connection::SendGenericPacket(MFiWPacketType aType, uint32_t aHandle)
+{
+    MFiWDataPacket pkt;
+    pkt.Size = PACKET_HEADER;
+    pkt.Type = aType;
+    pkt.Handle = aHandle;
     write(Descriptor, &pkt, pkt.Size);
 }
 

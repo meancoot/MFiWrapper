@@ -21,7 +21,8 @@
 
 #include "sicksaxis.h"
 
-HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection) : Interface(aConnection)
+HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection)
+    : Interface(aConnection), pauseHeld(false)
 {
 #ifdef IOS
     // Magic packet to start reports
@@ -89,6 +90,10 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     A(left_analog.y,  data.LeftStickY);
     A(right_analog.x, data.RightStickX);
     A(right_analog.y, data.RightStickY);
+
+    if (!pauseHeld && pad->buttons.PS)
+        MFiWrapperBackend::SendPausePressed(this);
+    pauseHeld = pad->buttons.PS;
 
     MFiWrapperBackend::SendControllerState(this, &data);
 }

@@ -85,6 +85,7 @@ typedef enum
     MFiWPacketStartDiscovery,
     MFiWPacketStopDiscovery,
     MFiWPacketSetPlayerIndex,
+    MFiWPacketPausePressed,
     MFiWPacketLast = 0xFFFFFFFF
 }   MFiWPacketType;
 

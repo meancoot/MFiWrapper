@@ -28,65 +28,56 @@ NSMutableArray* controllers;
 
 class FrontendConnection : public MFiWrapperCommon::Connection
 {
-    public:
-        FrontendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
-        
-        int32_t FindControllerByHandle(uint32_t aHandle)
+public:
+    FrontendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
+    
+    int32_t FindControllerByHandle(uint32_t aHandle)
+    {
+        for (int32_t i = 0; i < [controllers count]; i ++)
         {
-            for (int32_t i = 0; i < [controllers count]; i ++)
+            GCController* tweak = controllers[i];
+            if (tweak.tweakHandle == aHandle)
             {
-                GCController* tweak = controllers[i];
-                if (tweak.tweakHandle == aHandle)
-                {
-                    return i;
-                }
+                return i;
             }
-            
-            return -1;
         }
         
-        void AttachController(const MFiWDataPacket* aData)
-        {
-            GCControllerTweak* tweak = [GCControllerTweak controllerForHandle:aData->Handle data:aData->Connect];
-            [controllers addObject:tweak];
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];        
-        }
+        return -1;
+    }
+    
 
-        void DetachController(const MFiWDataPacket* aData)
+    void HandlePacket(const MFiWDataPacket* aPacket)
+    {
+        int32_t idx = aPacket->Handle ? FindControllerByHandle(aPacket->Handle) : -1;
+        GCController* tweak = (idx >= 0) ? controllers[idx] : nil;
+    
+        switch(aPacket->Type)
         {
-            int32_t idx = FindControllerByHandle(aData->Handle);
-            
-            if (idx < 0)
+            case MFiWPacketConnect:
+                tweak = [GCControllerTweak controllerForHandle:aPacket->Handle data:aPacket->Connect];
+                [controllers addObject:tweak];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification" object:tweak];
+                return;
+
+            case MFiWPacketDisconnect:
+                [tweak retain];
+                [controllers removeObjectAtIndex:idx];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
+                [tweak release];
                 return;
                 
-            GCController* tweak = controllers[idx];
-            [tweak retain];
-            [controllers removeObjectAtIndex:idx];
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidDisconnectNotification" object:tweak];
-            [tweak release];
-        }
-        
-        void ControllerState(const MFiWDataPacket* aData)
-        {
-            int32_t idx = FindControllerByHandle(aData->Handle);
-            
-            if (idx < 0)
+            case MFiWPacketInputState:
+                [tweak tweakUpdateButtons:&aPacket->State];
                 return;
 
-            GCController* tweak = controllers[idx];
-            [tweak tweakUpdateButtons:&aData->State];
-        }
-        
-        void HandlePacket(const MFiWDataPacket* aPacket)
-        {
-            switch(aPacket->Type)
-            {
-                case MFiWPacketConnect:     AttachController(aPacket); break;
-                case MFiWPacketDisconnect:  DetachController(aPacket); break;
-                case MFiWPacketInputState:  ControllerState (aPacket); break;
-                default: printf("Unknown packet sent to frontend: %d\n", aPacket->Type); break;
-            }        
-        }
+            case MFiWPacketPausePressed:
+                if (tweak.controllerPausedHandler)
+                    tweak.controllerPausedHandler(tweak);
+                return;
+
+            default: printf("Unknown packet sent to frontend: %d\n", aPacket->Type); break;
+        }        
+    }
 };
 
 FrontendConnection* connection;

@@ -62,6 +62,9 @@ namespace HIDPad
             virtual const char* GetVendorName() const;
             virtual uint32_t GetPresentControls() const;
             virtual uint32_t GetAnalogControls() const;
+            
+        private:
+            bool pauseHeld;
     };
 
     class WiiMote : public Interface

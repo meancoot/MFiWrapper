@@ -124,6 +124,16 @@ void SendControllerState(HIDPad::Interface* aInterface, const MFiWInputStatePack
     }
 }
 
+void SendPausePressed(HIDPad::Interface* aInterface)
+{
+    std::map<HIDPad::Interface*, uint32_t>::iterator device;
+    if ((device = devices.find(aInterface)) != devices.end())
+    {
+        uint32_t handle = device->second;
+        connection->SendPausePressed(handle);
+    }
+}
+
 }
 
 int HACKStart()
