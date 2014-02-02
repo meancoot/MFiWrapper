@@ -30,7 +30,7 @@ namespace HIDPad
     {
         public:
             Interface(const Interface&) = delete;
-        
+
             Interface(HIDManager::Connection* aConnection);
             virtual ~Interface();
 
@@ -48,6 +48,8 @@ namespace HIDPad
             virtual uint32_t GetAnalogControls() const { return 0; }
             
         protected:
+            void FinalizeConnection();
+        
             uint32_t handle;
             int32_t playerIndex;
             HIDManager::Connection* connection;
