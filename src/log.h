@@ -14,17 +14,20 @@
  */
 
 #include <string>
+#include <sstream>
 
 namespace MFiWrapperCommon {
 
 #define MFIW_DO_PRINT              \
 {                                  \
+  flockfile(stdout);               \
   printf("(%s):", header.c_str()); \
   va_list args;                    \
   va_start(args, aMessage);        \
   vprintf(aMessage, args);         \
   va_end(args);                    \
   printf("\n");                    \
+  funlockfile(stdout);             \
 }
 
 struct Logger

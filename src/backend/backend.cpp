@@ -25,6 +25,7 @@
 #include "backend.h"
 #include "protocol.h"
 #include "common.h"
+#include "log.h"
 
 namespace MFiWrapperBackend {
 
@@ -33,6 +34,8 @@ static std::map<uint32_t, HIDPad::Interface*> devices;
 static pthread_t thread;
 static int sockets[2] = { -1, -1 };
 
+static MFiWrapperCommon::Logger log("Backend");
+
 class BackendConnection : public MFiWrapperCommon::Connection
 {
     public:
@@ -40,18 +43,26 @@ class BackendConnection : public MFiWrapperCommon::Connection
         
         void HandlePacket(const MFiWDataPacket* aPacket)
         {
+            log.Verbose("Received packet (Type: %u, Size: %u, Handle: %u)",
+                        aPacket->Type, aPacket->Size, aPacket->Handle); 
+        
             switch(aPacket->Type)
             {
                 case MFiWPacketStartDiscovery:
+                    log.Verbose("Received start discovery packet.");
                     HIDManager::StartDeviceProbe();
                     return;
                 
                 case MFiWPacketStopDiscovery:
+                    log.Verbose("Received stop discovery packet.");
                     HIDManager::StopDeviceProbe();
                     return;
                 
                 case MFiWPacketSetPlayerIndex:
                 {
+                    log.Verbose("Received player index packet (Handle: %u, Index: %d)",
+                                aPacket->Handle, aPacket->PlayerIndex.Value);
+
                     HIDPad::Interface* device = devices[aPacket->Handle];
                     if (device)
                         device->SetPlayerIndex(aPacket->PlayerIndex.Value);
@@ -59,7 +70,9 @@ class BackendConnection : public MFiWrapperCommon::Connection
                 }
                 
                 default:
-                    printf("Unkown packet set to backend: %d\n", aPacket->Type);
+                    log.Warning("Unknown packet "
+                                "(Type: %u, Size: %u, Handle: %u)",
+                                aPacket->Type, aPacket->Size, aPacket->Handle);
                     return;
             }        
         }
@@ -69,10 +82,16 @@ BackendConnection* connection;
 
 static void* ManagerThread(void* aUnused)
 {
+    log.Verbose("Manager thread starting.");
+
     connection = new BackendConnection(sockets[0]);
 
-    HIDManager::StartUp();    
+    HIDManager::StartUp();
+    
+    log.Verbose("Manager thread entering run loop.");
     CFRunLoopRun();
+    log.Verbose("Manager thread left run loop.");
+    
     HIDManager::ShutDown();
     
     return 0;
@@ -95,17 +114,21 @@ uint32_t AttachController(HIDPad::Interface* aInterface)
 
 void DetachController(HIDPad::Interface* aInterface)
 {
+    log.Verbose("Detaching controller (Handle: %u)", aInterface->GetHandle());
+
     if (devices.erase(aInterface->GetHandle()))
         connection->SendDisconnect(aInterface->GetHandle());
 }
 
 void SendControllerState(HIDPad::Interface* aInterface, const MFiWInputStatePacket* aData)
 {
+    log.Verbose("Sending controller state (Handle: %u)", aInterface->GetHandle());
     connection->SendInputState(aInterface->GetHandle(), aData);
 }
 
 void SendPausePressed(HIDPad::Interface* aInterface)
 {
+    log.Verbose("Sending pause pressed (Handle: %u)", aInterface->GetHandle());
     connection->SendPausePressed(aInterface->GetHandle());
 }
 
