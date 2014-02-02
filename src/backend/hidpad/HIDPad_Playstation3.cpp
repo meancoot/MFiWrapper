@@ -32,8 +32,6 @@ HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection)
 
    // Without this the digital buttons won't be reported
    SetPlayerIndex(-1);
-   
-   FinalizeConnection();
 }
  
 void HIDPad::Playstation3::SetPlayerIndex(int32_t aIndex)

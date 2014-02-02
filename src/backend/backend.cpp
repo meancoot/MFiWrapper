@@ -29,7 +29,7 @@
 namespace MFiWrapperBackend {
 
 static uint32_t nextHandle = 1;
-static std::map<HIDPad::Interface*, uint32_t> devices;
+static std::map<uint32_t, HIDPad::Interface*> devices;
 static pthread_t thread;
 static int sockets[2] = { -1, -1 };
 
@@ -37,14 +37,6 @@ class BackendConnection : public MFiWrapperCommon::Connection
 {
     public:
         BackendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
-        
-        HIDPad::Interface* FindDeviceByHandle(uint32_t aHandle)
-        {
-            for (auto i = devices.begin(); i != devices.end(); i ++)
-                if (i->second == aHandle)
-                    return i->first;
-            return 0;
-        }
         
         void HandlePacket(const MFiWDataPacket* aPacket)
         {
@@ -60,7 +52,7 @@ class BackendConnection : public MFiWrapperCommon::Connection
                 
                 case MFiWPacketSetPlayerIndex:
                 {
-                    HIDPad::Interface* device = FindDeviceByHandle(aPacket->Handle);
+                    HIDPad::Interface* device = devices[aPacket->Handle];
                     if (device)
                         device->SetPlayerIndex(aPacket->PlayerIndex.Value);
                     return;
@@ -86,52 +78,35 @@ static void* ManagerThread(void* aUnused)
     return 0;
 }
 
-void AttachController(HIDPad::Interface* aInterface)
+uint32_t AttachController(HIDPad::Interface* aInterface)
 {
-    if (devices.find(aInterface) == devices.end())
-    {
-        uint32_t handle = nextHandle ++;
-        devices[aInterface] = handle;
+    uint32_t handle = nextHandle ++;
+    devices[handle] = aInterface;
 
-        MFiWConnectPacket pkt;
-        memset(&pkt, 0, sizeof(pkt));
-        strlcpy(pkt.VendorName, aInterface->GetVendorName(), sizeof(pkt.VendorName));
-        pkt.PresentControls = aInterface->GetPresentControls();
-        pkt.AnalogControls = aInterface->GetAnalogControls();
-        connection->SendConnect(handle, &pkt);
-    }
+    MFiWConnectPacket pkt;
+    memset(&pkt, 0, sizeof(pkt));
+    strlcpy(pkt.VendorName, aInterface->GetVendorName(), sizeof(pkt.VendorName));
+    pkt.PresentControls = aInterface->GetPresentControls();
+    pkt.AnalogControls = aInterface->GetAnalogControls();
+    connection->SendConnect(handle, &pkt);
+    
+    return handle;
 }
 
 void DetachController(HIDPad::Interface* aInterface)
 {
-    std::map<HIDPad::Interface*, uint32_t>::iterator device;
-    if ((device = devices.find(aInterface)) != devices.end())
-    {
-        uint32_t handle = device->second;
-        devices.erase(device);
-     
-        connection->SendDisconnect(handle);
-    }
+    if (devices.erase(aInterface->GetHandle()))
+        connection->SendDisconnect(aInterface->GetHandle());
 }
 
 void SendControllerState(HIDPad::Interface* aInterface, const MFiWInputStatePacket* aData)
 {
-    std::map<HIDPad::Interface*, uint32_t>::iterator device;
-    if ((device = devices.find(aInterface)) != devices.end())
-    {
-        uint32_t handle = device->second;
-        connection->SendInputState(handle, aData);
-    }
+    connection->SendInputState(aInterface->GetHandle(), aData);
 }
 
 void SendPausePressed(HIDPad::Interface* aInterface)
 {
-    std::map<HIDPad::Interface*, uint32_t>::iterator device;
-    if ((device = devices.find(aInterface)) != devices.end())
-    {
-        uint32_t handle = device->second;
-        connection->SendPausePressed(handle);
-    }
+    connection->SendPausePressed(aInterface->GetHandle());
 }
 
 }

@@ -6,11 +6,10 @@ OBJECTS = src/common.o \
           \
           src/backend/backend.o \
           src/backend/hidmanager/HIDManager_OSX.o \
-          src/backend/hidpad/wiimote.o \
-          src/backend/hidpad/HIDPad_Interface.o \
+          src/backend/hidpad/HIDPad.o \
           src/backend/hidpad/HIDPad_Playstation3.o \
           src/backend/hidpad/HIDPad_WiiMote.o \
-          src/backend/hidpad/HIDPad.o
+          src/backend/hidpad/wiimote.o          
 
 CXXFLAGS        += -std=c++11 -Iinclude -Isrc
 FRONTEND_FLAGS  += -Isrc/frontend

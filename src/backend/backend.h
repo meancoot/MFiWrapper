@@ -25,7 +25,7 @@ class Interface;
 
 namespace MFiWrapperBackend {
 
-void AttachController(HIDPad::Interface* aInterface);
+uint32_t AttachController(HIDPad::Interface* aInterface);
 void DetachController(HIDPad::Interface* aInterface);
 void SendControllerState(HIDPad::Interface* aInterface, const MFiWInputStatePacket* aData);
 void SendPausePressed(HIDPad::Interface* aInterface);

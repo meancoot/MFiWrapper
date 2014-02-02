@@ -28,8 +28,6 @@ HIDPad::WiiMote::WiiMote(HIDManager::Connection* aConnection) : Interface(aConne
     device.exp.type = EXP_NONE;
 
     wiimote_handshake(&device, -1, NULL, -1);
-    
-    FinalizeConnection();
 }            
 
 void HIDPad::WiiMote::SetPlayerIndex(int32_t aIndex)

@@ -34,6 +34,8 @@ namespace HIDPad
             Interface(HIDManager::Connection* aConnection);
             virtual ~Interface();
 
+            uint32_t GetHandle() const { return handle; }
+
             HIDManager::Connection* GetConnection() { return connection; }
 
             virtual void SetPlayerIndex(int32_t aIndex) { playerIndex = aIndex; }
@@ -46,8 +48,7 @@ namespace HIDPad
             virtual uint32_t GetAnalogControls() const { return 0; }
             
         protected:
-            void FinalizeConnection();
-
+            uint32_t handle;
             int32_t playerIndex;
             HIDManager::Connection* connection;
     };
@@ -82,6 +83,5 @@ namespace HIDPad
             wiimote_t device;
     };
 
-    class Interface;
     Interface* Connect(const char* aName, HIDManager::Connection* aConnection);
 }

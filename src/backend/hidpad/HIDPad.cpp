@@ -18,6 +18,18 @@
 
 #include "HIDPad.h"
 #include "HIDManager.h"
+#include "backend.h"
+
+HIDPad::Interface::Interface(HIDManager::Connection* aConnection) :
+    handle(0), playerIndex(-1), connection(aConnection)
+{
+    handle = MFiWrapperBackend::AttachController(this);
+}
+
+HIDPad::Interface::~Interface()
+{
+    MFiWrapperBackend::DetachController(this);
+}
 
 HIDPad::Interface* HIDPad::Connect(const char* aName, HIDManager::Connection* aConnection)
 {            
