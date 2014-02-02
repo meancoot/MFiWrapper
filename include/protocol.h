@@ -17,6 +17,8 @@
 
 #include <stdint.h>
 
+#define MFiWLocalHandle 0xFFFFFFFF
+
 typedef enum
 {
     MFi_DPad,               MFi_A,

@@ -6,6 +6,7 @@ mfiwrapper_FILES =  src/common.cpp \
                     src/frontend/frontend.mm \
                     src/frontend/GCController_Hook_iOS.xm \
                     src/frontend/MFiWrapper.mm \
+                    src/frontend/keyboard.mm \
                     \
                     src/backend/backend.cpp \
                     src/backend/hidmanager/HIDManager_iOS.cpp \
@@ -19,6 +20,9 @@ mfiwrapper_FILES =  src/common.cpp \
 mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend -Isrc
 mfiwrapper_CCFLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
 
+ifdef USE_ICADE
+mfiwrapper_CFLAGS  += -DUSE_ICADE
+endif
 
 mfiwrapper_LDFLAGS = -lBTstack
 

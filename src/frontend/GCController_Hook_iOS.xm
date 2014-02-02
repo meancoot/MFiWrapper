@@ -35,3 +35,39 @@
 
 %end
 
+// iOS7 iCade Support
+
+@interface UIEvent(iOS7Keyboard)
+@property(readonly, nonatomic) long long _keyCode;
+@property(readonly, nonatomic) BOOL _isKeyDown;
+- (void*)_hidEvent;
+@end
+
+#include "keyboard.h"
+
+%hook UIApplication
+
+- (id)_keyCommandForEvent:(UIEvent*)event
+{
+#ifdef USE_ICADE
+    // This gets called twice with the same timestamp for each keypress.
+    static double last_time_stamp;
+
+    if (last_time_stamp != [event timestamp])
+    {
+        last_time_stamp = [event timestamp];
+        
+        // If the _hidEvent is null, [event _keyCode] will crash.
+        // (This happens with the on screen keyboard.)
+        if ([event _hidEvent])
+        {
+            MFiWrapperFrontend::Keyboard::Event([event _isKeyDown], [event _keyCode]);
+        }
+    }
+#endif
+
+    return %orig;
+}
+
+%end
+

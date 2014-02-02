@@ -15,20 +15,11 @@
 
 #pragma once
 
-#include <Foundation/Foundation.h>
-#include "protocol.h"
+#include <stdint.h>
 
 namespace MFiWrapperFrontend {
+namespace Keyboard           {
 
-NSArray* GetControllers();
-void StartWirelessControllerDiscovery();
-void StopWirelessControllerDiscovery();
-void SetControllerIndex(uint32_t aHandle, int32_t aIndex);
+void Event(bool aDown, uint32_t aCode);
 
-// These are external so they can be called from keyboard.mm
-void HandlePacketConnect(const MFiWDataPacket* aPacket);
-void HandlePacketDisconnect(const MFiWDataPacket* aPacket);
-void HandlePacketInputState(const MFiWDataPacket* aPacket);
-void HandlePacketPausePressed(const MFiWDataPacket* aPacket);
-
-}
+}}
