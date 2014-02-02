@@ -45,9 +45,11 @@
     #undef BUTTON
     #undef ANALOG_TEST
 
-    tweak.gamepad = [GCGamepad gamepadForController:tweak];
-    tweak.extendedGamepad = [GCExtendedGamepad gamepadForController:tweak];
     tweak.playerIndex = GCControllerPlayerIndexUnset;
+    tweak.gamepad = [GCGamepad gamepadForController:tweak];
+    
+    if (data.PresentControls & MFi_ExtendedElements)
+        tweak.extendedGamepad = [GCExtendedGamepad gamepadForController:tweak];
 
     return [tweak autorelease];
 }

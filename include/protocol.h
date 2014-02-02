@@ -24,7 +24,10 @@ typedef enum
     MFi_Y,                  MFi_LeftShoulder,
     MFi_RightShoulder,      MFi_LeftThumbstick,
     MFi_RightThumbstick,    MFi_LeftTrigger,
-    MFi_RightTrigger,       MFi_LastElement
+    MFi_RightTrigger,       MFi_LastElement,
+    MFi_NormalElements      = 0x7F,
+    MFi_ExtendedElements    = 0x780,
+    MFi_AllElements         = 0x7FF
 }   MFiButtons;
 
 typedef enum

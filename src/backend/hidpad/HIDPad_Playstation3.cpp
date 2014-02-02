@@ -103,16 +103,10 @@ const char* HIDPad::Playstation3::GetVendorName() const
 
 uint32_t HIDPad::Playstation3::GetPresentControls() const
 {
-    return MFi_A_Bit | MFi_B_Bit | MFi_X_Bit | MFi_Y_Bit |
-           MFi_LeftShoulder_Bit | MFi_RightShoulder_Bit |
-           MFi_LeftTrigger_Bit | MFi_RightTrigger_Bit |
-           MFi_DPad_Bit | MFi_LeftThumbstick_Bit | MFi_RightThumbstick_Bit;
+    return MFi_AllElements;
 }
 
 uint32_t HIDPad::Playstation3::GetAnalogControls() const
 {
-    return MFi_A_Bit | MFi_B_Bit | MFi_X_Bit | MFi_Y_Bit |
-           MFi_LeftShoulder_Bit | MFi_RightShoulder_Bit |
-           MFi_LeftTrigger_Bit | MFi_RightTrigger_Bit |
-           MFi_DPad_Bit | MFi_LeftThumbstick_Bit | MFi_RightThumbstick_Bit;
+    return MFi_AllElements;
 }
