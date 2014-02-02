@@ -92,7 +92,8 @@ typedef enum
     MFiWPacketStopDiscovery,
     MFiWPacketSetPlayerIndex,
     MFiWPacketPausePressed,
-    MFiWPacketLast = 0xFFFFFFFF
+    MFiWPacketLast,
+    MFiWPacketUINT32 = 0xFFFFFFFF
 }   MFiWPacketType;
 
 typedef struct
@@ -109,12 +110,12 @@ typedef struct
     };
 }   MFiWDataPacket;
 
-#define MFiWPacketGenericSize        (offsetof(MFiWDataPacket, Connect))
-#define MFiWPacketConnectSize        (offsetof(MFiWDataPacket, Connect)     + sizeof(MFiWConnectPacket))
-#define MFiWPacketInputStateSize     (offsetof(MFiWDataPacket, State)       + sizeof(MFiWInputStatePacket))
-#define MFiWPacketSetPlayerIndexSize (offsetof(MFiWDataPacket, PlayerIndex) + sizeof(MFiWPlayerIndexPacket))
+static_assert(offsetof(MFiWDataPacket, Connect) == 12,
+              "MFiWDataPacket header must be 12 bytes long.");
 
-//
-static_assert(offsetof(MFiWDataPacket, Connect) == 12, "MFiWDataPacket header must be 12 bytes long.");
+#define MFiWPacketGenericSize        (12                                )
+#define MFiWPacketConnectSize        (12 + sizeof(MFiWConnectPacket)    )
+#define MFiWPacketInputStateSize     (12 + sizeof(MFiWInputStatePacket) )
+#define MFiWPacketSetPlayerIndexSize (12 + sizeof(MFiWPlayerIndexPacket))
 
 #pragma pack(pop)
