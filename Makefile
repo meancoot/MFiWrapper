@@ -16,8 +16,9 @@ mfiwrapper_FILES =  src/common.cpp \
                     src/backend/hidpad/HIDPad_WiiMote.cpp \
                     src/backend/hidpad/wiimote.cpp                    
 
+LOG_LEVEL           =  0
 
-mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend -Isrc
+mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend -Isrc -DLOG_LEVEL=$(LOG_LEVEL)
 mfiwrapper_CCFLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
 
 ifdef USE_ICADE

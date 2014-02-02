@@ -11,7 +11,9 @@ OBJECTS = src/common.o \
           src/backend/hidpad/HIDPad_WiiMote.o \
           src/backend/hidpad/wiimote.o          
 
-CXXFLAGS        += -std=c++11 -Iinclude -Isrc
+LOG_LEVEL       =  0
+
+CXXFLAGS        += -std=c++11 -Iinclude -Isrc -DLOG_LEVEL=$(LOG_LEVEL)
 FRONTEND_FLAGS  += -Isrc/frontend
 BACKEND_FLAGS   += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
 LDFLAGS         += -framework CoreFoundation -framework IOKit -framework Foundation -dynamiclib

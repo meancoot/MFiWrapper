@@ -19,28 +19,36 @@
 
 #include "frontend.h"
 #include "common.h"
+#include "log.h"
 #include "MFiWrapper.h"
 
 extern int HACKStart();
 namespace MFiWrapperFrontend {
 
 NSMutableArray* controllers;
+MFiWrapperCommon::Logger log("Frontend");
 
 class FrontendConnection : public MFiWrapperCommon::Connection
 {
 public:
-    FrontendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };    
+    FrontendConnection(int aDescriptor) : Connection(aDescriptor) { };    
 
     void HandlePacket(const MFiWDataPacket* aPacket)
     {
-    
+        log.Verbose("Received packet (Type: %u, Size: %u, Handle: %u)",
+                     aPacket->Type, aPacket->Size, aPacket->Handle);
+
         switch(aPacket->Type)
         {
             case MFiWPacketConnect:      HandlePacketConnect(aPacket);      return;
             case MFiWPacketDisconnect:   HandlePacketDisconnect(aPacket);   return;
             case MFiWPacketInputState:   HandlePacketInputState(aPacket);   return;
             case MFiWPacketPausePressed: HandlePacketPausePressed(aPacket); return;
-            default: printf("Unknown packet sent to frontend: %d\n", aPacket->Type); break;
+            default:
+                log.Warning("Unknown packet "
+                            "(Type: %u, Size: %u, Handle: %u)",
+                            aPacket->Type, aPacket->Size, aPacket->Handle);
+                return;
         }        
     }
 };
@@ -64,11 +72,17 @@ static int32_t FindControllerByHandle(uint32_t aHandle)
 void Startup()
 {
     if (!controllers)
+    {
+        log.Verbose("Creating controllers array.");
         controllers = [[NSMutableArray array] retain];
+    }
 
 #ifndef USE_ICADE
     if (!connection)
+    {
+        log.Verbose("Connecting to backend.");
         connection = new FrontendConnection(HACKStart());
+    }
 #endif
 }
 
@@ -82,6 +96,7 @@ void StartWirelessControllerDiscovery()
 {
     Startup();
     
+    log.Verbose("Stopping wireless controller discovery.");
     if (connection)
         connection->SendStartDiscovery();
 }
@@ -90,18 +105,27 @@ void StopWirelessControllerDiscovery()
 {
     Startup();
     
+    log.Verbose("Starting wireless controller discovery.");
     if (connection)
         connection->SendStopDiscovery();    
 }
 
 void SetControllerIndex(uint32_t aHandle, int32_t aIndex)
 {
+    log.Verbose("Setting controller player index (Handle: %u, Index: %d)",
+                 aHandle, aIndex);
+
     if (connection && aHandle != MFiWLocalHandle)
         connection->SendSetPlayerIndex(aHandle, aIndex);
 }
 
 void HandlePacketConnect(const MFiWDataPacket* aPacket)
 {
+    log.Verbose("New controller connected (Handle: %u, Vendor: %s "
+                 "Buttons: %04X Analog: %04X",
+                 aPacket->Handle, aPacket->Connect.VendorName,
+                 aPacket->Connect.PresentControls, aPacket->Connect.AnalogControls);
+
     GCController* tweak = [GCControllerTweak controllerForHandle:aPacket->Handle data:aPacket->Connect];
     [controllers addObject:tweak];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"GCControllerDidConnectNotification"
@@ -110,6 +134,8 @@ void HandlePacketConnect(const MFiWDataPacket* aPacket)
 
 void HandlePacketDisconnect(const MFiWDataPacket* aPacket)
 {
+    log.Verbose("Controller disconnected (Handle: %u)", aPacket->Handle);
+
     int32_t idx = aPacket->Handle ? FindControllerByHandle(aPacket->Handle) : -1;
     GCController* tweak = (idx >= 0) ? controllers[idx] : nil;
 
@@ -122,6 +148,8 @@ void HandlePacketDisconnect(const MFiWDataPacket* aPacket)
 
 void HandlePacketInputState(const MFiWDataPacket* aPacket)
 {
+    log.Verbose("Controller Input State Updated (Handle: %u)", aPacket->Handle);
+
     int32_t idx = aPacket->Handle ? FindControllerByHandle(aPacket->Handle) : -1;
     GCController* tweak = (idx >= 0) ? controllers[idx] : nil;
     [tweak tweakUpdateButtons:&aPacket->State];
@@ -129,6 +157,8 @@ void HandlePacketInputState(const MFiWDataPacket* aPacket)
 
 void HandlePacketPausePressed(const MFiWDataPacket* aPacket)
 {
+    log.Verbose("Controller Pause Pressed (Handle: %u)", aPacket->Handle);
+
     int32_t idx = aPacket->Handle ? FindControllerByHandle(aPacket->Handle) : -1;
     GCController* tweak = (idx >= 0) ? controllers[idx] : nil;
 
