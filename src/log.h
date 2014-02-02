@@ -14,7 +14,6 @@
  */
 
 #include <string>
-#include <sstream>
 
 namespace MFiWrapperCommon {
 
