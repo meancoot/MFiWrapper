@@ -32,11 +32,7 @@ enum iCade8BittySym
 
 // Map Keyboard HID usage codes to iCade8BittySym values.
 // iCadeMap[4] is equivalent to the 'A' key, iCadeMap[5] is 'B', and so on.
-static const struct
-{
-  bool Up;
-  int32_t Button;
-}  iCadeMap[0x20] =
+static const struct { bool Up; int32_t Button; } iCadeMap[0x20] =
 {
   { false, -1    }, { false, -1    }, { false, -1   }, { false, -1    }, // 0
   { false, LEFT  }, { false, -1    }, { true , RIGHT}, { false, RIGHT }, // 4
@@ -60,7 +56,7 @@ void MFiWrapperFrontend::Keyboard::Event(bool aDown, uint32_t aCode)
 
         MFiWDataPacket pkt;
         memset(&pkt, 0, sizeof(pkt));
-        pkt.Size = 12 + sizeof(pkt.Connect);
+        pkt.Size = MFiWPacketConnectSize;
         pkt.Type = MFiWPacketConnect;
         pkt.Handle = MFiWLocalHandle;
         strlcpy(pkt.Connect.VendorName, "iCade Device", sizeof(pkt.Connect.VendorName));
@@ -68,7 +64,7 @@ void MFiWrapperFrontend::Keyboard::Event(bool aDown, uint32_t aCode)
         HandlePacketConnect(&pkt);
         
         //
-        dataPacket.Size = 12 + sizeof(pkt.State);
+        dataPacket.Size = MFiWPacketInputStateSize;
         dataPacket.Type = MFiWPacketInputState;
         dataPacket.Handle = MFiWLocalHandle;
     }
@@ -94,7 +90,7 @@ void MFiWrapperFrontend::Keyboard::Event(bool aDown, uint32_t aCode)
             {
                 MFiWDataPacket pkt;
                 memset(&pkt, 0, sizeof(pkt));
-                pkt.Size = 12;
+                pkt.Size = MFiWPacketGenericSize;
                 pkt.Type = MFiWPacketPausePressed;
                 pkt.Handle = MFiWLocalHandle;
                 HandlePacketPausePressed(&pkt);

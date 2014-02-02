@@ -16,6 +16,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define MFiWLocalHandle 0xFFFFFFFF
 
@@ -107,5 +108,13 @@ typedef struct
         MFiWPlayerIndexPacket PlayerIndex;
     };
 }   MFiWDataPacket;
+
+#define MFiWPacketGenericSize        (offsetof(MFiWDataPacket, Connect))
+#define MFiWPacketConnectSize        (offsetof(MFiWDataPacket, Connect)     + sizeof(MFiWConnectPacket))
+#define MFiWPacketInputStateSize     (offsetof(MFiWDataPacket, State)       + sizeof(MFiWInputStatePacket))
+#define MFiWPacketSetPlayerIndexSize (offsetof(MFiWDataPacket, PlayerIndex) + sizeof(MFiWPlayerIndexPacket))
+
+//
+static_assert(offsetof(MFiWDataPacket, Connect) == 12, "MFiWDataPacket header must be 12 bytes long.");
 
 #pragma pack(pop)

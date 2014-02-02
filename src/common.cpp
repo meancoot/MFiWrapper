@@ -17,8 +17,6 @@
 
 namespace MFiWrapperCommon {
 
-static const uint32_t PACKET_HEADER = 12;
-
 Connection::Connection(int aDescriptor) :
     Descriptor(aDescriptor),
     Socket(0),
@@ -51,7 +49,7 @@ Connection::~Connection()
 void Connection::SendConnect(uint32_t aHandle, const MFiWConnectPacket* aData)
 {
     MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER + sizeof(MFiWConnectPacket);
+    pkt.Size = MFiWPacketConnectSize;
     pkt.Type = MFiWPacketConnect;
     pkt.Handle = aHandle;
     pkt.Connect = *aData;
@@ -66,7 +64,7 @@ void Connection::SendDisconnect(uint32_t aHandle)
 void Connection::SendInputState(uint32_t aHandle, const MFiWInputStatePacket* aData)
 {
     MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER + sizeof(MFiWInputStatePacket);
+    pkt.Size = MFiWPacketInputStateSize;
     pkt.Type = MFiWPacketInputState;
     pkt.Handle = aHandle;
     pkt.State = *aData;
@@ -86,7 +84,7 @@ void Connection::SendStopDiscovery()
 void Connection::SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex)
 {
     MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER + sizeof(MFiWPlayerIndexPacket);
+    pkt.Size = MFiWPacketSetPlayerIndexSize;
     pkt.Type = MFiWPacketSetPlayerIndex;
     pkt.Handle = aHandle;
     pkt.PlayerIndex.Value = aIndex;
@@ -101,7 +99,7 @@ void Connection::SendPausePressed(uint32_t aHandle)
 void Connection::SendGenericPacket(MFiWPacketType aType, uint32_t aHandle)
 {
     MFiWDataPacket pkt;
-    pkt.Size = PACKET_HEADER;
+    pkt.Size = MFiWPacketGenericSize;
     pkt.Type = aType;
     pkt.Handle = aHandle;
     write(Descriptor, &pkt, pkt.Size);
