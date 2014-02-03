@@ -21,7 +21,7 @@
 #include "backend.h"
 
 HIDPad::Interface::Interface(HIDManager::Connection* aConnection) :
-    handle(0), playerIndex(-1), connection(aConnection)
+    handle(0), connection(aConnection)
 {
 }
 

@@ -18,6 +18,7 @@ mfiwrapper_FILES =  src/common.cpp \
 
 LOG_LEVEL           =  0
 
+mfiwrapper_CFLAGS  += -DIOS
 mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend -Isrc -DLOG_LEVEL=$(LOG_LEVEL)
 mfiwrapper_CCFLAGS += -Isrc/backend -Isrc/backend/hidpad -Isrc/backend/hidmanager
 

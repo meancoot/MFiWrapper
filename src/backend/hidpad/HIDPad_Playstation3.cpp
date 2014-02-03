@@ -22,46 +22,36 @@
 #include "sicksaxis.h"
 
 HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection)
-    : Interface(aConnection), pauseHeld(false)
+    : Interface(aConnection), pauseHeld(true), needSetReport(true)
 {
 #ifdef IOS
     // Magic packet to start reports
     static uint8_t data[] = {0x53, 0xF4, 0x42, 0x03, 0x00, 0x00};
-    HIDManager::SendPacket(device->connection, data, 6);
+    HIDManager::SendPacket(aConnection, data, 6);
 #endif
 
-   // Without this the digital buttons won't be reported
-   SetPlayerIndex(-1);
-   
-   FinalizeConnection();
+    FinalizeConnection();
 }
  
 void HIDPad::Playstation3::SetPlayerIndex(int32_t aIndex)
 {
-    Interface::SetPlayerIndex(aIndex);
+    if (aIndex < 0 || aIndex >= 4)
+        ledByte = 0;
+    else
+        ledByte = 1 << (aIndex + 1);
 
-    // TODO: Can this be modified to turn off motion tracking?
-    static uint8_t report_buffer[] = {
-        0x52, 0x01,
-        0x00, 0xFF, 0x00, 0xFF, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00,
-        0xff, 0x27, 0x10, 0x00, 0x32,
-        0xff, 0x27, 0x10, 0x00, 0x32,
-        0xff, 0x27, 0x10, 0x00, 0x32,
-        0xff, 0x27, 0x10, 0x00, 0x32,
-        0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00
-    };
-    report_buffer[11] = 1 << ((playerIndex % 4) + 1);
-    //report_buffer[4] = motors[1] >> 8;
-    //report_buffer[6] = motors[0] >> 8;
-    HIDManager::SendPacket(connection, report_buffer, sizeof(report_buffer));
+    needSetReport = true;
 }
 
 void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
 {
+    if (needSetReport)
+    {
+        SetReport();
+        needSetReport = false;    
+    }
+
+
     SS_GAMEPAD* pad = (SS_GAMEPAD*)&aData[1];
         
     MFiWInputStatePacket data;
@@ -77,7 +67,7 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     data.RightShoulder = B(shoulder, R1);
     data.LeftTrigger   = B(shoulder, L2);
     data.RightTrigger  = B(shoulder, R2);
-    
+
     data.DPadX = (B(dpad, left) > 0) ? -B(dpad, left) : B(dpad, right);
     data.DPadY = (B(dpad, up  ) > 0) ? -B(dpad, up)   : B(dpad, down );
     
@@ -111,4 +101,26 @@ uint32_t HIDPad::Playstation3::GetPresentControls() const
 uint32_t HIDPad::Playstation3::GetAnalogControls() const
 {
     return MFi_AllElements;
+}
+
+void HIDPad::Playstation3::SetReport()
+{
+    // TODO: Can this be modified to turn off motion tracking?
+    static uint8_t report_buffer[] = {
+        0x52, 0x01,
+        0x00, 0xFF, 0x00, 0xFF, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0x27, 0x10, 0x00, 0x32,
+        0xff, 0x27, 0x10, 0x00, 0x32,
+        0xff, 0x27, 0x10, 0x00, 0x32,
+        0xff, 0x27, 0x10, 0x00, 0x32,
+        0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00
+    };
+    report_buffer[11] = ledByte;
+    //report_buffer[4] = motors[1] >> 8;
+    //report_buffer[6] = motors[0] >> 8;
+    HIDManager::SendPacket(connection, report_buffer, sizeof(report_buffer));
 }

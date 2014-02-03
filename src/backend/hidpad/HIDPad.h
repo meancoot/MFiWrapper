@@ -38,8 +38,7 @@ namespace HIDPad
 
             HIDManager::Connection* GetConnection() { return connection; }
 
-            virtual void SetPlayerIndex(int32_t aIndex) { playerIndex = aIndex; }
-            virtual int GetPlayerIndex() const { return playerIndex; }
+            virtual void SetPlayerIndex(int32_t aIndex) { }
 
             virtual void HandlePacket(uint8_t *aData, uint16_t aSize) { }
             
@@ -51,7 +50,6 @@ namespace HIDPad
             void FinalizeConnection();
         
             uint32_t handle;
-            int32_t playerIndex;
             HIDManager::Connection* connection;
     };
     
@@ -67,7 +65,11 @@ namespace HIDPad
             virtual uint32_t GetAnalogControls() const;
             
         private:
+            void SetReport();
+        
             bool pauseHeld;
+            uint8_t ledByte;
+            bool needSetReport;
     };
 
     class WiiMote : public Interface
