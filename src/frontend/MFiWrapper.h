@@ -47,6 +47,8 @@ enum { GCControllerPlayerIndexUnset = -1 };
 /****************/
 @interface GCController : NSObject
 
+typedef void (^GCControllerDiscoveryCompleteHandler)(void);
+
 @property (copy) void (^controllerPausedHandler)(GCController *controller);
 @property (copy) NSString *vendorName;
 @property (getter = isAttachedToDevice) BOOL attachedToDevice;

@@ -27,6 +27,8 @@ namespace MFiWrapperFrontend {
 
 NSMutableArray* controllers;
 MFiWrapperCommon::Logger log("Frontend");
+GCControllerDiscoveryCompleteHandler discoveryCompletionHandler;
+bool discoveryActive;
 
 class FrontendConnection : public MFiWrapperCommon::Connection
 {
@@ -92,22 +94,42 @@ NSArray* GetControllers()
     return controllers;
 }
 
-void StartWirelessControllerDiscovery()
+void StartWirelessControllerDiscovery(GCControllerDiscoveryCompleteHandler aHandler)
 {
     Startup();
-    
-    log.Verbose("Stopping wireless controller discovery.");
-    if (connection)
+ 
+    // This gets copied even if discovery is already running; the replaced
+    // handler will never be called in this scenario. (Check GCController.h in
+    // GameController.framework for reference).
+    [discoveryCompletionHandler release];
+    discoveryCompletionHandler = [aHandler copy]; 
+        
+    log.Verbose("Starting wireless controller discovery.");
+    if (connection && !discoveryActive)
         connection->SendStartDiscovery();
+    discoveryActive = true;
 }
 
 void StopWirelessControllerDiscovery()
 {
     Startup();
     
-    log.Verbose("Starting wireless controller discovery.");
-    if (connection)
-        connection->SendStopDiscovery();    
+    log.Verbose("Stopping wireless controller discovery.");
+
+    if (connection && discoveryActive)
+        connection->SendStopDiscovery();
+    discoveryActive = false;
+
+    if (discoveryCompletionHandler)
+    {
+        // discoveryCompletionHandler is consumed here to prevent issues if
+        // the block it points to makes a call to {Start|Stop}WirelessControllerDiscovery.
+        // Without this a double release or infinite recursion are possible.
+        GCControllerDiscoveryCompleteHandler gch = discoveryCompletionHandler;
+        discoveryCompletionHandler = 0;
+        gch();
+        [gch release];
+    }
 }
 
 void SetControllerIndex(uint32_t aHandle, int32_t aIndex)

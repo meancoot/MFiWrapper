@@ -17,11 +17,12 @@
 
 #include <Foundation/Foundation.h>
 #include "protocol.h"
+#include "MFiWrapper.h"
 
 namespace MFiWrapperFrontend {
 
 NSArray* GetControllers();
-void StartWirelessControllerDiscovery();
+void StartWirelessControllerDiscovery(GCControllerDiscoveryCompleteHandler aHandler);
 void StopWirelessControllerDiscovery();
 void SetControllerIndex(uint32_t aHandle, int32_t aIndex);
 

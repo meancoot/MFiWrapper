@@ -18,9 +18,9 @@
 
 %hook GCController
 
-+ (void)startWirelessControllerDiscoveryWithCompletionHandler:(void (^)(void))completionHandler
++ (void)startWirelessControllerDiscoveryWithCompletionHandler:(GCControllerDiscoveryCompleteHandler)completionHandler
 {
-    MFiWrapperFrontend::StartWirelessControllerDiscovery();
+    MFiWrapperFrontend::StartWirelessControllerDiscovery(completionHandler);
 }
 
 + (void)stopWirelessControllerDiscovery
