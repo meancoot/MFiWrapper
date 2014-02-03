@@ -20,14 +20,11 @@
 #include "HIDManager.h"
 #include "HIDPad.h"
 #include "btstack.h"
+#include "log.h"
 
 namespace HIDManager
 {
-#ifndef NDEBUG
-    #define BTPAD_LOG(...) printf(__VA_ARGS__)
-#else
-    #define BTPAD_LOG(...)
-#endif
+    static MFiWrapperCommon::Logger log("btstack");
 
     bool inquiry_off;
     bool inquiry_running;
@@ -142,7 +139,7 @@ namespace HIDManager
           {
              case BTSTACK_EVENT_STATE:
              {
-                BTPAD_LOG("BTstack: HCI State %d\n", packet[2]);
+                log.Verbose("BTstack: HCI State %d\n", packet[2]);
          
                 switch (packet[2])
                 {                  
@@ -177,8 +174,8 @@ namespace HIDManager
                 if (COMMAND_COMPLETE_EVENT(packet, hci_read_bd_addr))
                 {
                    bt_flip_addr(event_addr, &packet[6]);
-                   if (!packet[5]) BTPAD_LOG("BTpad: Local address is %s\n", bd_addr_to_str(event_addr));
-                   else            BTPAD_LOG("BTpad: Failed to get local address (Status: %02X)\n", packet[5]);               
+                   if (!packet[5]) log.Verbose("BTpad: Local address is %s\n", bd_addr_to_str(event_addr));
+                   else            log.Verbose("BTpad: Failed to get local address (Status: %02X)\n", packet[5]);               
                 }
              }
              break;
@@ -192,7 +189,7 @@ namespace HIDManager
                    Connection* connection = new Connection();
                    if (connection)
                    {
-                      BTPAD_LOG("BTpad: Inquiry found device\n");
+                      log.Verbose("BTpad: Inquiry found device\n");
 
                       connection->SetAddress(event_addr);
                       connection->state = BTPAD_CONNECTING;
@@ -227,11 +224,11 @@ namespace HIDManager
                 {
                    if (!connection)
                    {
-                      BTPAD_LOG("BTpad: Got L2CAP 'Channel Opened' event for unrecognized device\n");
+                      log.Verbose("BTpad: Got L2CAP 'Channel Opened' event for unrecognized device\n");
                       break;
                    }
 
-                   BTPAD_LOG("BTpad: L2CAP channel opened: (PSM: %02X)\n", psm);
+                   log.Verbose("BTpad: L2CAP channel opened: (PSM: %02X)\n", psm);
                    connection->handle = handle;
             
                    if (psm == PSM_HID_CONTROL)
@@ -239,16 +236,16 @@ namespace HIDManager
                    else if (psm == PSM_HID_INTERRUPT)
                       connection->channels[1] = channel_id;
                    else
-                      BTPAD_LOG("BTpad: Got unknown L2CAP PSM, ignoring (PSM: %02X)\n", psm);
+                      log.Verbose("BTpad: Got unknown L2CAP PSM, ignoring (PSM: %02X)\n", psm);
 
                    if (connection->channels[0] && connection->channels[1])
                    {
-                      BTPAD_LOG("BTpad: Got both L2CAP channels, requesting name\n");
+                      log.Verbose("BTpad: Got both L2CAP channels, requesting name\n");
                       btpad_queue_hci_remote_name_request(connection->address, 0, 0, 0);
                    }
                 }
                 else
-                   BTPAD_LOG("BTpad: Got failed L2CAP 'Channel Opened' event (PSM: %02X, Status: %02X)\n", psm, packet[2]);
+                   log.Verbose("BTpad: Got failed L2CAP 'Channel Opened' event (PSM: %02X, Status: %02X)\n", psm, packet[2]);
              }
              break;
 
@@ -265,7 +262,7 @@ namespace HIDManager
                    connection = new Connection();
                    if (connection)
                    {
-                      BTPAD_LOG("BTpad: Got new incoming connection\n");
+                      log.Verbose("BTpad: Got new incoming connection\n");
 
                       connection->SetAddress(event_addr);
                       connection->handle = handle;
@@ -274,7 +271,7 @@ namespace HIDManager
                    else break;
                 }
 
-                BTPAD_LOG("BTpad: Incoming L2CAP connection (PSM: %02X)\n", READ_BT_16(packet, 10));
+                log.Verbose("BTpad: Incoming L2CAP connection (PSM: %02X)\n", READ_BT_16(packet, 10));
                 bt_send_cmd(&l2cap_accept_connection, channel_id);
              }
              break;
@@ -287,11 +284,11 @@ namespace HIDManager
 
                 if (!connection)
                 {
-                   BTPAD_LOG("BTpad: Got unexpected remote name, ignoring\n");
+                   log.Verbose("BTpad: Got unexpected remote name, ignoring\n");
                    break;
                 }
 
-                BTPAD_LOG("BTpad: Got %.200s\n", (char*)&packet[9]);
+                log.Verbose("BTpad: Got %.200s\n", (char*)&packet[9]);
             
                 connection->hidpad = HIDPad::Connect((char*)packet + 9, connection);
                 connection->state = BTPAD_CONNECTED;
@@ -300,7 +297,7 @@ namespace HIDManager
 
              case HCI_EVENT_PIN_CODE_REQUEST:
              {
-                BTPAD_LOG("BTpad: Sending WiiMote PIN\n");
+                log.Verbose("BTpad: Sending WiiMote PIN\n");
 
                 bt_flip_addr(event_addr, &packet[2]);
                 btpad_queue_hci_pin_code_request_reply(event_addr, &packet[2]);
@@ -321,14 +318,14 @@ namespace HIDManager
                    }
                 }
                 else
-                   BTPAD_LOG("BTpad: Got failed 'Disconnection Complete' event (Status: %02X)\n", packet[2]);
+                   log.Verbose("BTpad: Got failed 'Disconnection Complete' event (Status: %02X)\n", packet[2]);
              }
              break;
 
              case L2CAP_EVENT_SERVICE_REGISTERED:
              {
                 if (packet[2])
-                   BTPAD_LOG("BTpad: Got failed 'Service Registered' event (PSM: %02X, Status: %02X)\n", READ_BT_16(packet, 3), packet[2]);
+                   log.Verbose("BTpad: Got failed 'Service Registered' event (PSM: %02X, Status: %02X)\n", READ_BT_16(packet, 3), packet[2]);
              }
              break;
           }
