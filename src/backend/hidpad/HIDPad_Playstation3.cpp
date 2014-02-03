@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "HIDManager.h"
 #include "HIDPad.h"
 #include "protocol.h"
@@ -51,7 +52,6 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
         needSetReport = false;    
     }
 
-
     SS_GAMEPAD* pad = (SS_GAMEPAD*)&aData[1];
         
     MFiWInputStatePacket data;
@@ -75,11 +75,21 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     #define A(X, Y)                               \
         aval = pad->X + ((pad->X > 128) ? 1 : 0); \
         Y = ((aval * 2) / 256.0f) - 1.0f;
-        
+
     A(left_analog.x,  data.LeftStickX);
     A(left_analog.y,  data.LeftStickY);
     A(right_analog.x, data.RightStickX);
     A(right_analog.y, data.RightStickY);
+    
+    // TODO: Add real deadzone calc
+    if (fabsf(data.LeftStickX) < .1f)
+        data.LeftStickX = 0.0f;
+    if (fabsf(data.LeftStickY) < .1f)
+        data.LeftStickY = 0.0f;
+    if (fabsf(data.RightStickY) < .1f)
+        data.RightStickX = 0.0f;
+    if (fabsf(data.RightStickY) < .1f)
+        data.RightStickY = 0.0f;
 
     if (!pauseHeld && pad->buttons.PS)
         MFiWrapperBackend::SendPausePressed(this);
