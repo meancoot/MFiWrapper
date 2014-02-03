@@ -60,7 +60,6 @@
     [_vendorName release];
     [_gamepad release];
     [_extendedGamepad release];
-    [_controllerPausedHandler release];
     [_tweakElements release];
     [super dealloc];
 }
