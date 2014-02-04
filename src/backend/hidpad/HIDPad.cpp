@@ -15,6 +15,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #include "HIDPad.h"
 #include "HIDManager.h"
@@ -30,10 +31,40 @@ HIDPad::Interface::~Interface()
     MFiWrapperBackend::DetachController(this);
 }
 
+float HIDPad::Interface::CalculateAxis(int32_t aValue, const int32_t aCalibration[4])
+{
+    assert(aCalibration[0] < aCalibration[1]);
+    assert(aCalibration[1] <= aCalibration[2]);
+    assert(aCalibration[2] < aCalibration[3]);
+
+    // Handle out of range cases
+    if (aValue < aCalibration[0])   return -1.0f;
+    if (aValue > aCalibration[3])   return 1.0f;
+    
+    // Check if it's inside the dead zone
+    if (aValue >= aCalibration[1] && aValue <= aCalibration[2])
+        return 0.0f;
+        
+    if (aValue < aCalibration[1])
+    {
+        float val = aValue - aCalibration[0];
+        float div = aCalibration[1] - aCalibration[0];
+        return 0.0f - (val / div);
+    }
+    else
+    {
+        float val = aValue - aCalibration[2];
+        float div = aCalibration[3] - aCalibration[2];
+        return (val / div);
+    }
+}
+
 void HIDPad::Interface::FinalizeConnection()
 {
     handle = MFiWrapperBackend::AttachController(this);
 }
+
+//
 
 HIDPad::Interface* HIDPad::Connect(const char* aName, HIDManager::Connection* aConnection)
 {            

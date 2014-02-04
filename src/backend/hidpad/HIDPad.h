@@ -45,6 +45,12 @@ namespace HIDPad
             virtual const char* GetVendorName() const { return "Unknown Vendor"; }
             virtual uint32_t GetPresentControls() const { return 0xFFFFFFFF; }
             virtual uint32_t GetAnalogControls() const { return 0; }
+
+            // aCalibration Values (both ranges are inclusive):
+            // 0 -> 3: Total analog range
+            // 1 -> 2: Dead zone
+            // Must satisfy 0 < 1 <= 2 < 3
+            static float CalculateAxis(int32_t aValue, const int32_t aCalibration[4]);
             
         protected:
             void FinalizeConnection();

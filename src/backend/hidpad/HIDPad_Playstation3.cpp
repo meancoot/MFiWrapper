@@ -71,25 +71,12 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     data.DPadX = (B(dpad, left) > 0) ? -B(dpad, left) : B(dpad, right);
     data.DPadY = (B(dpad, up  ) > 0) ? -B(dpad, up)   : B(dpad, down );
     
-    uint32_t aval;
-    #define A(X, Y)                               \
-        aval = pad->X + ((pad->X > 128) ? 1 : 0); \
-        Y = ((aval * 2) / 256.0f) - 1.0f;
-
-    A(left_analog.x,  data.LeftStickX);
-    A(left_analog.y,  data.LeftStickY);
-    A(right_analog.x, data.RightStickX);
-    A(right_analog.y, data.RightStickY);
-    
-    // TODO: Add real deadzone calc
-    if (fabsf(data.LeftStickX) < .1f)
-        data.LeftStickX = 0.0f;
-    if (fabsf(data.LeftStickY) < .1f)
-        data.LeftStickY = 0.0f;
-    if (fabsf(data.RightStickY) < .1f)
-        data.RightStickX = 0.0f;
-    if (fabsf(data.RightStickY) < .1f)
-        data.RightStickY = 0.0f;
+    // Axes
+    static const int32_t calibration[4] = { 0, 116, 140, 255 };
+    data.LeftStickX = CalculateAxis(pad->left_analog.x, calibration);
+    data.LeftStickY = CalculateAxis(pad->left_analog.y, calibration);
+    data.RightStickX = CalculateAxis(pad->right_analog.x, calibration);
+    data.RightStickY = CalculateAxis(pad->right_analog.y, calibration);
 
     if (!pauseHeld && pad->buttons.PS)
         MFiWrapperBackend::SendPausePressed(this);
