@@ -201,7 +201,7 @@
     {
         self.value = value;
         self.pressed = value >= .25f;
-    
+
         if (self.valueChangedHandler)
             self.valueChangedHandler(self, self.value, self.pressed);
     }
@@ -289,6 +289,9 @@
 
 - (uint32_t)tweakSetValues:(const float*)values
 {
+    if (self.xAxis.value == values[0] && self.yAxis.value == values[1])
+        return 2;
+
     [self.xAxis tweakSetValue:values[0]];
     [self.left  tweakSetValue:(values[0] < 0.0f) ? fabsf(values[0]) : 0.0f];
     [self.right tweakSetValue:(values[0] > 0.0f) ?       values[0]  : 0.0f];
@@ -296,7 +299,10 @@
     [self.yAxis tweakSetValue:values[1]];
     [self.up    tweakSetValue:(values[1] < 0.0f) ? fabsf(values[1]) : 0.0f];
     [self.down  tweakSetValue:(values[1] > 0.0f) ?       values[1]  : 0.0f];
-    
+
+    if (self.valueChangedHandler)
+        self.valueChangedHandler(self, values[0], values[1]);
+
     return 2;
 }
 
