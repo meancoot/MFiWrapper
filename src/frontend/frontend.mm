@@ -104,7 +104,7 @@ void StartWirelessControllerDiscovery(GCControllerDiscoveryCompleteHandler aHand
     [discoveryCompletionHandler release];
     discoveryCompletionHandler = [aHandler copy]; 
         
-    log.Verbose("Starting wireless controller discovery.");
+    log.Notice("Starting wireless controller discovery.");
     if (connection && !discoveryActive)
         connection->SendStartDiscovery();
     discoveryActive = true;
@@ -114,7 +114,7 @@ void StopWirelessControllerDiscovery()
 {
     Startup();
     
-    log.Verbose("Stopping wireless controller discovery.");
+    log.Notice("Stopping wireless controller discovery.");
 
     if (connection && discoveryActive)
         connection->SendStopDiscovery();

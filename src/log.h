@@ -53,10 +53,20 @@ struct Logger
         va_end(args);
         #endif
     }
-        
-    void Verbose(const char* aMessage, ...)
+    
+    void Notice(const char* aMessage, ...)
     {
         #if LOG_LEVEL > 2
+        va_list args;
+        va_start(args, aMessage);
+        DoPrint(aMessage, args);
+        va_end(args);
+        #endif    
+    }
+    
+    void Verbose(const char* aMessage, ...)
+    {
+        #if LOG_LEVEL > 3
         va_list args;
         va_start(args, aMessage);
         DoPrint(aMessage, args);
