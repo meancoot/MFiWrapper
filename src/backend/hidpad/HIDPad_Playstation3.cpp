@@ -72,7 +72,7 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     data.DPadY = (B(dpad, up  ) > 0) ? -B(dpad, up)   : B(dpad, down );
     
     // Axes
-    static const int32_t calibration[4] = { 0, 116, 140, 255 };
+    static const int32_t calibration[4] = { 0, 100, 155, 255 };
     data.LeftStickX = CalculateAxis(pad->left_analog.x, calibration);
     data.LeftStickY = CalculateAxis(pad->left_analog.y, calibration);
     data.RightStickX = CalculateAxis(pad->right_analog.x, calibration);

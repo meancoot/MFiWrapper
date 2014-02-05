@@ -49,7 +49,7 @@ float HIDPad::Interface::CalculateAxis(int32_t aValue, const int32_t aCalibratio
     {
         float val = aValue - aCalibration[0];
         float div = aCalibration[1] - aCalibration[0];
-        return 0.0f - (val / div);
+        return 0.0f - (1.0f - (val / div));
     }
     else
     {
