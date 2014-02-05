@@ -74,9 +74,9 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     // Axes
     static const int32_t calibration[4] = { 0, 100, 155, 255 };
     data.LeftStickX = CalculateAxis(pad->left_analog.x, calibration);
-    data.LeftStickY = CalculateAxis(pad->left_analog.y, calibration);
+    data.LeftStickY = 0.0f - CalculateAxis(pad->left_analog.y, calibration);
     data.RightStickX = CalculateAxis(pad->right_analog.x, calibration);
-    data.RightStickY = CalculateAxis(pad->right_analog.y, calibration);
+    data.RightStickY = 0.0f - CalculateAxis(pad->right_analog.y, calibration);
 
     if (!pauseHeld && pad->buttons.PS)
         MFiWrapperBackend::SendPausePressed(this);
