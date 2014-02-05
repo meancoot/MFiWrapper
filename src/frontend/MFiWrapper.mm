@@ -200,7 +200,9 @@
     if (value != self.value)
     {
         self.value = value;
-        self.pressed = value >= .25f;
+        
+        // NOTE: Docs say this should be .25f
+        self.pressed = value >= 0.0f;
 
         if (self.valueChangedHandler)
             self.valueChangedHandler(self, self.value, self.pressed);
