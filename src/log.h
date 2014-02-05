@@ -20,23 +20,18 @@ namespace MFiWrapperCommon {
 
 struct Logger
 {
-    Logger(const std::string& aHeader) :
-        header(aHeader), aslMessage(asl_new(ASL_TYPE_MSG)
-    {
-        asl_set(aslMessage, ASL_KEY_READ_UID, "-1");    
-    }
-
-    ~Logger()
-    {
-        asl_free(aslMessage);
-    }
+    Logger(const std::string& aHeader) : header(aHeader) { }
 
 
     void DoPrint(const char* aMessage, va_list ap)
     {
         char buffer[1024];
         snprintf(buffer, 1024, "(MFiW: %s) %s", header.c_str(), aMessage);
+
+        aslmsg msg = asl_new(ASL_TYPE_MSG);
+        asl_set(msg, ASL_KEY_READ_UID, "-1");    
         asl_vlog(0, msg, ASL_LEVEL_NOTICE, buffer, ap);
+        asl_free(msg);
     }
 
     void Error(const char* aMessage, ...)
@@ -71,7 +66,6 @@ struct Logger
     
 private:
     std::string header;
-    aslmsg aslMessage;
 };
 
 #undef MFIW_DO_PRINT
