@@ -14,48 +14,64 @@
  */
 
 #include <string>
+#include <asl.h>
 
 namespace MFiWrapperCommon {
 
-#define MFIW_DO_PRINT              \
-{                                  \
-  flockfile(stdout);               \
-  printf("(%s):", header.c_str()); \
-  va_list args;                    \
-  va_start(args, aMessage);        \
-  vprintf(aMessage, args);         \
-  va_end(args);                    \
-  printf("\n");                    \
-  funlockfile(stdout);             \
-}
-
 struct Logger
 {
-    Logger(const std::string& aHeader) : header(aHeader) { }
+    Logger(const std::string& aHeader) :
+        header(aHeader), aslMessage(asl_new(ASL_TYPE_MSG)
+    {
+        asl_set(aslMessage, ASL_KEY_READ_UID, "-1");    
+    }
+
+    ~Logger()
+    {
+        asl_free(aslMessage);
+    }
+
+
+    void DoPrint(const char* aMessage, va_list ap)
+    {
+        char buffer[1024];
+        snprintf(buffer, 1024, "(MFiW: %s) %s", header.c_str(), aMessage);
+        asl_vlog(0, msg, ASL_LEVEL_NOTICE, buffer, ap);
+    }
 
     void Error(const char* aMessage, ...)
     {
         #if LOG_LEVEL > 0
-        MFIW_DO_PRINT;
+        va_list args;
+        va_start(args, aMessage);
+        DoPrint(aMessage, args);
+        va_end(args);
         #endif 
     }
 
     void Warning(const char* aMessage, ...)
     {
         #if LOG_LEVEL > 1
-        MFIW_DO_PRINT;
+        va_list args;
+        va_start(args, aMessage);
+        DoPrint(aMessage, args);
+        va_end(args);
         #endif
     }
         
     void Verbose(const char* aMessage, ...)
     {
         #if LOG_LEVEL > 2
-        MFIW_DO_PRINT;
+        va_list args;
+        va_start(args, aMessage);
+        DoPrint(aMessage, args);
+        va_end(args);
         #endif 
     }
     
 private:
     std::string header;
+    aslmsg aslMessage;
 };
 
 #undef MFIW_DO_PRINT
