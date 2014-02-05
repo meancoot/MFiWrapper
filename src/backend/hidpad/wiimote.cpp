@@ -41,9 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <unistd.h>
-#include <stdbool.h>
+#include <algorithm>
 
 #include "wiimote.h"
 #include "HIDPad.h"
@@ -445,43 +443,32 @@ int wiimote_write_data(struct wiimote_t* wm, unsigned int addr, byte* data, byte
 
 int classic_ctrl_handshake(struct wiimote_t* wm, struct classic_ctrl_t* cc, byte* data, unsigned short len)
 {
-   memset(cc, 0, sizeof(*cc));
-	wm->exp.type = EXP_CLASSIC;
-	return 1;
+    memset(cc, 0, sizeof(*cc));
+    wm->exp.type = EXP_CLASSIC;
+    return 1;
 }
 
-static float normalize_and_interpolate(float min, float max, float t)
+static void process_axis(struct axis_t* axis, int32_t raw)
 {
-   return (min == max) ? 0.0f : (t - min) / (max - min);
-}
+    if (!axis->initialized)
+    {
+        axis->initialized = true;
+        axis->calibration[0] = raw - 3;
+        axis->calibration[1] = raw - 2;
+        axis->calibration[2] = raw + 2;
+        axis->calibration[3] = raw + 3;
+    }
 
-static void process_axis(struct axis_t* axis, byte raw)
-{
-   if (!axis->has_center)
-   {
-      axis->has_center = true;
-      axis->min = raw - 2;
-      axis->center = raw;
-      axis->max = raw + 2;
-   }
-
-   if (raw < axis->min) axis->min = raw;
-   if (raw > axis->max) axis->max = raw;
-   axis->raw_value = raw;
-
-   if (raw < axis->center)
-      axis->value = -normalize_and_interpolate(axis->center, axis->min, raw);
-   else if (raw > axis->center)
-      axis->value =  normalize_and_interpolate(axis->center, axis->max, raw);
-   else
-      axis->value = 0;
+    axis->calibration[0] = std::min(axis->calibration[0], raw);
+    axis->calibration[3] = std::max(axis->calibration[3], raw);
+    axis->value = HIDPad::Interface::CalculateAxis(raw, axis->calibration);
 }
 
 void classic_ctrl_event(struct classic_ctrl_t* cc, byte* msg)
 {
-   cc->btns = ~BIG_ENDIAN_SHORT(*(short*)(msg + 4)) & CLASSIC_CTRL_BUTTON_ALL;
+    cc->btns = ~BIG_ENDIAN_SHORT(*(short*)(msg + 4)) & CLASSIC_CTRL_BUTTON_ALL;
 	process_axis(&cc->ljs.x, (msg[0] & 0x3F));
-   process_axis(&cc->ljs.y, (msg[1] & 0x3F));
-   process_axis(&cc->rjs.x, ((msg[0] & 0xC0) >> 3) | ((msg[1] & 0xC0) >> 5) | ((msg[2] & 0x80) >> 7));
-   process_axis(&cc->rjs.y, (msg[2] & 0x1F));
+    process_axis(&cc->ljs.y, (msg[1] & 0x3F));
+    process_axis(&cc->rjs.x, ((msg[0] & 0xC0) >> 3) | ((msg[1] & 0xC0) >> 5) | ((msg[2] & 0x80) >> 7));
+    process_axis(&cc->rjs.y, (msg[2] & 0x1F));
 }

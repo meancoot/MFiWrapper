@@ -87,20 +87,49 @@ void HIDPad::WiiMote::ProcessButtons()
     MFiWInputStatePacket data;
     memset(&data, 0, sizeof(data));
     
-    #define B(X) (device.btns & WIIMOTE_BUTTON_##X)
+    if (device.exp.type == EXP_NONE)
+    {   
+        #define B(X) (device.btns & WIIMOTE_BUTTON_##X)
     
-    data.A             = B(ONE)   ? 1.0f : 0.0f;
-    data.B             = B(TWO)   ? 1.0f : 0.0f;
-    data.X             = B(A)     ? 1.0f : 0.0f;
-    data.Y             = B(B)     ? 1.0f : 0.0f;
-    data.LeftShoulder  = B(MINUS) ? 1.0f : 0.0f;
-    data.RightShoulder = B(PLUS)  ? 1.0f : 0.0f;
+        data.A              = B(ONE)   ? 1.0f : 0.0f;
+        data.B              = B(TWO)   ? 1.0f : 0.0f;
+        data.X              = B(A)     ? 1.0f : 0.0f;
+        data.Y              = B(B)     ? 1.0f : 0.0f;
+        data.LeftShoulder   = B(MINUS) ? 1.0f : 0.0f;
+        data.RightShoulder  = B(PLUS)  ? 1.0f : 0.0f;
     
-         if (B(UP))        data.DPadX = -1.0f;
-    else if (B(DOWN))      data.DPadX =  1.0f;
+             if (B(UP))        data.DPadX = -1.0f;
+        else if (B(DOWN))      data.DPadX =  1.0f;
     
-         if (B(LEFT))      data.DPadY = -1.0f;
-    else if (B(RIGHT))     data.DPadY =  1.0f;
+             if (B(RIGHT))     data.DPadY = -1.0f;
+        else if (B(LEFT))      data.DPadY =  1.0f;
+        
+        #undef B
+    }
+    else if (device.exp.type == EXP_CLASSIC)
+    {
+        #define B(X) (device.exp.classic.btns & CLASSIC_CTRL_BUTTON_##X)
+        data.A              = B(B)     ? 1.0f : 0.0f;
+        data.B              = B(A)     ? 1.0f : 0.0f;
+        data.X              = B(Y)     ? 1.0f : 0.0f;
+        data.Y              = B(X)     ? 1.0f : 0.0f;
+        data.LeftShoulder   = B(FULL_L)? 1.0f : 0.0f;
+        data.RightShoulder  = B(FULL_R)? 1.0f : 0.0f;
+
+        data.LeftTrigger    = B(ZL)    ? 1.0f : 0.0f;
+        data.RightTrigger   = B(ZR)    ? 1.0f : 0.0f;
+        
+             if (B(LEFT))      data.DPadX = -1.0f;
+        else if (B(RIGHT))     data.DPadX =  1.0f;
+    
+             if (B(UP))        data.DPadY = -1.0f;
+        else if (B(DOWN))      data.DPadY =  1.0f;
+        
+        data.LeftStickX     = device.exp.classic.ljs.x.value;
+        data.LeftStickY     = device.exp.classic.ljs.y.value;
+        data.RightStickX    = device.exp.classic.rjs.x.value;
+        data.RightStickY    = device.exp.classic.rjs.y.value;                        
+    }
 
     MFiWrapperBackend::SendControllerState(this, &data);
 }
