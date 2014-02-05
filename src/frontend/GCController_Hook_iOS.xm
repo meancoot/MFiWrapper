@@ -16,6 +16,28 @@
 #include "frontend.h"
 #include "MFiWrapper.h"
 
+%hook NSNotificationCenter
+
+- (id)addObserverForName:(NSString *)name object:(id)obj queue:(NSOperationQueue *)queue usingBlock:(void (^)(NSNotification *))block
+{
+    id result = %orig;
+    
+    if ([name isEqualToString:@"GCControllerDidConnectNotification"])
+        MFiWrapperFrontend::GetControllers();
+
+    return result;
+}
+
+- (void)addObserver:(id)notificationObserver selector:(SEL)notificationSelector name:(NSString *)notificationName object:(id)notificationSender
+{
+    %orig;
+    
+    if ([notificationName isEqualToString:@"GCControllerDidConnectNotification"])
+        MFiWrapperFrontend::GetControllers();
+}
+
+%end
+
 %hook GCController
 
 + (void)startWirelessControllerDiscoveryWithCompletionHandler:(GCControllerDiscoveryCompleteHandler)completionHandler
