@@ -26,9 +26,6 @@ namespace HIDManager
 {
     static MFiWrapperCommon::Logger log("btstack");
 
-    bool inquiry_off;
-    bool inquiry_running;
-
     enum { BTPAD_EMPTY, BTPAD_CONNECTING, BTPAD_CONNECTED };
 
     std::set<Connection*> Connections;
@@ -101,15 +98,10 @@ namespace HIDManager
     
     void StartDeviceProbe()
     {
-        inquiry_off = false;
-            
-        if (!inquiry_running)
-            btpad_queue_hci_inquiry(HCI_INQUIRY_LAP, 3, 1);
     }
     
     void StopDeviceProbe()
     {
-        inquiry_off = true;
     }
 
     //
@@ -149,7 +141,6 @@ namespace HIDManager
                       btpad_queue_hci_read_bd_addr();
                       bt_send_cmd(&l2cap_register_service, PSM_HID_CONTROL, 672);  // TODO: Where did I get 672 for mtu?
                       bt_send_cmd(&l2cap_register_service, PSM_HID_INTERRUPT, 672);
-                      btpad_queue_hci_inquiry(HCI_INQUIRY_LAP, 3, 1);
                
                       btpad_queue_run(1);
                       break;
@@ -177,37 +168,6 @@ namespace HIDManager
                    if (!packet[5]) log.Verbose("BTpad: Local address is %s\n", bd_addr_to_str(event_addr));
                    else            log.Verbose("BTpad: Failed to get local address (Status: %02X)\n", packet[5]);               
                 }
-             }
-             break;
-
-             case HCI_EVENT_INQUIRY_RESULT:
-             {
-                if (packet[2])
-                {
-                   bt_flip_addr(event_addr, &packet[3]);
-
-                   Connection* connection = new Connection();
-                   if (connection)
-                   {
-                      log.Verbose("BTpad: Inquiry found device\n");
-
-                      connection->SetAddress(event_addr);
-                      connection->state = BTPAD_CONNECTING;
-
-                      bt_send_cmd(&l2cap_create_channel, connection->address, PSM_HID_CONTROL);
-                      bt_send_cmd(&l2cap_create_channel, connection->address, PSM_HID_INTERRUPT);
-                   }
-                }
-             }
-             break;
-
-             case HCI_EVENT_INQUIRY_COMPLETE:
-             {
-                // This must be turned off during gameplay as it causes a ton of lag
-                inquiry_running = !inquiry_off;
-
-                if (inquiry_running)
-                   btpad_queue_hci_inquiry(HCI_INQUIRY_LAP, 3, 1);
              }
              break;
 
