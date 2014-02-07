@@ -28,16 +28,15 @@ struct btpad_queue_command
    
       struct
       {
+         bd_addr_t bd_addr;
+         uint8_t role;
+      }  hci_switch_role;
+   
+      struct
+      {
          uint16_t handle;
          uint8_t reason;
       }  hci_disconnect;
-
-      struct
-      {
-         uint32_t lap;
-         uint8_t length;
-         uint8_t num_responses;
-      }  hci_inquiry;
 
       struct
       {
@@ -84,12 +83,10 @@ void btpad_queue_process()
 
            if (cmd->command == &btstack_set_power_mode)
          bt_send_cmd(cmd->command, cmd->btstack_set_power_mode.on);
-      else if (cmd->command == &hci_read_bd_addr)
-         bt_send_cmd(cmd->command);
+      else if (cmd->command == &hci_switch_role_command)
+         bt_send_cmd(cmd->command, cmd->hci_switch_role.bd_addr, cmd->hci_switch_role.role);
       else if (cmd->command == &hci_disconnect)
          bt_send_cmd(cmd->command, cmd->hci_disconnect.handle, cmd->hci_disconnect.reason);
-      else if (cmd->command == &hci_inquiry)
-         bt_send_cmd(cmd->command, cmd->hci_inquiry.lap, cmd->hci_inquiry.length, cmd->hci_inquiry.num_responses);
       else if (cmd->command == &hci_remote_name_request)
          bt_send_cmd(cmd->command, cmd->hci_remote_name_request.bd_addr, cmd->hci_remote_name_request.page_scan_repetition_mode,
                          cmd->hci_remote_name_request.reserved, cmd->hci_remote_name_request.clock_offset);
@@ -111,11 +108,13 @@ void btpad_queue_btstack_set_power_mode(uint8_t on)
    btpad_queue_process();
 }
 
-void btpad_queue_hci_read_bd_addr()
+void btpad_queue_hci_switch_role(bd_addr_t bd_addr, uint8_t role)
 {
    struct btpad_queue_command* cmd = &commands[insert_position];
 
-   cmd->command = &hci_read_bd_addr;
+   cmd->command = &hci_switch_role_command;
+   memcpy(cmd->hci_switch_role.bd_addr, bd_addr, sizeof(bd_addr_t));
+   cmd->hci_switch_role.role = role;
 
    INCPOS(insert);
    btpad_queue_process();
@@ -128,19 +127,6 @@ void btpad_queue_hci_disconnect(uint16_t handle, uint8_t reason)
    cmd->command = &hci_disconnect;
    cmd->hci_disconnect.handle = handle;
    cmd->hci_disconnect.reason = reason;
-
-   INCPOS(insert);
-   btpad_queue_process();
-}
-
-void btpad_queue_hci_inquiry(uint32_t lap, uint8_t length, uint8_t num_responses)
-{
-   struct btpad_queue_command* cmd = &commands[insert_position];
-
-   cmd->command = &hci_inquiry;
-   cmd->hci_inquiry.lap = lap;
-   cmd->hci_inquiry.length = length;
-   cmd->hci_inquiry.num_responses = num_responses;
 
    INCPOS(insert);
    btpad_queue_process();
