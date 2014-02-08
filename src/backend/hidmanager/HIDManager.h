@@ -40,8 +40,5 @@ namespace HIDManager
     void ShutDown();
 
     void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize);
-
-    void StartDeviceProbe();
-    void StopDeviceProbe();
 };
 

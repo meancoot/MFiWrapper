@@ -78,19 +78,6 @@ namespace HIDManager
     {    
         IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, aData + 1, aSize - 1);
     }
-    
-    void StartDeviceProbe()
-    {
-        // Not supported:
-        //     Any devices must connect to the Mac directly. Fortunately OS X
-        //     will perma-pair itself with both DualShock 3 and WiiMotes when
-        //     connected.
-    }
-    
-    void StopDeviceProbe()
-    {
-        // Not supported
-    }
 
     //
     

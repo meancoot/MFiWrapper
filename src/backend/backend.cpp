@@ -48,16 +48,6 @@ class BackendConnection : public MFiWrapperCommon::Connection
         
             switch(aPacket->Type)
             {
-                case MFiWPacketStartDiscovery:
-                    log.Verbose("Received start discovery packet.");
-                    HIDManager::StartDeviceProbe();
-                    return;
-                
-                case MFiWPacketStopDiscovery:
-                    log.Verbose("Received stop discovery packet.");
-                    HIDManager::StopDeviceProbe();
-                    return;
-                
                 case MFiWPacketSetPlayerIndex:
                 {
                     log.Verbose("Received player index packet (Handle: %u, Index: %d)",

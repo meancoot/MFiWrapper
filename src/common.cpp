@@ -71,16 +71,6 @@ void Connection::SendInputState(uint32_t aHandle, const MFiWInputStatePacket* aD
     write(Descriptor, &pkt, pkt.Size);
 }
 
-void Connection::SendStartDiscovery()
-{
-    SendGenericPacket(MFiWPacketStartDiscovery);
-}
-
-void Connection::SendStopDiscovery()
-{
-    SendGenericPacket(MFiWPacketStopDiscovery);
-}
-
 void Connection::SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex)
 {
     MFiWDataPacket pkt;

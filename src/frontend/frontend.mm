@@ -28,7 +28,6 @@ namespace MFiWrapperFrontend {
 NSMutableArray* controllers;
 MFiWrapperCommon::Logger log("Frontend");
 GCControllerDiscoveryCompleteHandler discoveryCompletionHandler;
-bool discoveryActive;
 
 class FrontendConnection : public MFiWrapperCommon::Connection
 {
@@ -105,9 +104,6 @@ void StartWirelessControllerDiscovery(GCControllerDiscoveryCompleteHandler aHand
     discoveryCompletionHandler = [aHandler copy]; 
         
     log.Notice("Starting wireless controller discovery.");
-    if (connection && !discoveryActive)
-        connection->SendStartDiscovery();
-    discoveryActive = true;
 }
 
 void StopWirelessControllerDiscovery()
@@ -116,9 +112,6 @@ void StopWirelessControllerDiscovery()
     
     log.Notice("Stopping wireless controller discovery.");
 
-    if (connection && discoveryActive)
-        connection->SendStopDiscovery();
-    discoveryActive = false;
 
     if (discoveryCompletionHandler)
     {

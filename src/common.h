@@ -30,8 +30,6 @@ class Connection
         void SendConnect(uint32_t aHandle, const MFiWConnectPacket* aData);
         void SendDisconnect(uint32_t aHandle);
         void SendInputState(uint32_t aHandle, const MFiWInputStatePacket* aData);
-        void SendStartDiscovery();
-        void SendStopDiscovery();
         void SendSetPlayerIndex(uint32_t aHandle, int32_t aIndex);
         void SendPausePressed(uint32_t aHandle);
 

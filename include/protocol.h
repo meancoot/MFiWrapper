@@ -88,8 +88,6 @@ typedef enum
     MFiWPacketConnect,
     MFiWPacketDisconnect,
     MFiWPacketInputState,
-    MFiWPacketStartDiscovery,
-    MFiWPacketStopDiscovery,
     MFiWPacketSetPlayerIndex,
     MFiWPacketPausePressed,
     MFiWPacketLast,

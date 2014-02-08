@@ -82,14 +82,6 @@ void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize)
     bt_send_l2cap(aConnection->channels[0], aData, aSize);
 }
 
-void StartDeviceProbe()
-{
-}
-
-void StopDeviceProbe()
-{
-}
-
 //
 
 Connection* FindConnection(uint16_t handle, bd_addr_t address)
