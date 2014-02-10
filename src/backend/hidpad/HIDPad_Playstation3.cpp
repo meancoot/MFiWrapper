@@ -23,7 +23,7 @@
 #include "sicksaxis.h"
 
 HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection)
-    : Interface(aConnection), pauseHeld(true), needSetReport(true)
+    : Interface(aConnection), pauseHeld(true), ledByte(0), needSetReport(true)
 {
 #ifdef IOS
     // Magic packet to start reports

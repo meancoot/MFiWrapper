@@ -78,6 +78,25 @@ namespace HIDPad
             bool needSetReport;
     };
 
+    class DualShock4 : public Interface
+    {
+        public:
+            DualShock4(HIDManager::Connection* aConnection);
+            virtual void SetPlayerIndex(int32_t aIndex);
+            virtual void HandlePacket(uint8_t *aData, uint16_t aSize);
+
+            virtual const char* GetVendorName() const;
+            virtual uint32_t GetPresentControls() const;
+            virtual uint32_t GetAnalogControls() const;
+            
+        private:
+            void SetReport();
+        
+            bool pauseHeld;
+            uint8_t playerIndex;
+            bool needSetReport;
+    };
+
     class WiiMote : public Interface
     {
         public:

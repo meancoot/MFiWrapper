@@ -72,6 +72,8 @@ HIDPad::Interface* HIDPad::Connect(const char* aName, HIDManager::Connection* aC
         return new Playstation3(aConnection);
     else if (strstr(aName, "Nintendo RVL-CNT-01"))
         return new HIDPad::WiiMote(aConnection);
+    else if (strstr(aName, "Wireless Controller"))
+        return new DualShock4(aConnection);
     else /* DUMMY */
         return new Interface(aConnection);            
 }

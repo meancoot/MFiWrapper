@@ -8,6 +8,7 @@ OBJECTS = src/common.o \
           src/backend/hidmanager/HIDManager_OSX.o \
           src/backend/hidpad/HIDPad.o \
           src/backend/hidpad/HIDPad_Playstation3.o \
+          src/backend/hidpad/HIDPad_DualShock4.o \
           src/backend/hidpad/HIDPad_WiiMote.o \
           src/backend/hidpad/wiimote.o          
 
