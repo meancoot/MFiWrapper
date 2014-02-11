@@ -23,7 +23,6 @@
 HIDPad::DualShock4::DualShock4(HIDManager::Connection* aConnection)
     : Interface(aConnection), pauseHeld(true), playerIndex(-1), needSetReport(true)
 {
-    // 0x43 = GET_REPORT | FEATURE
     // This is needed to get full input packet over bluetooth.
     uint8_t buf[0x25];
     HIDManager::GetReport(connection, true, 0x2, buf, sizeof(buf));
@@ -119,7 +118,6 @@ uint32_t HIDPad::DualShock4::GetAnalogControls() const
 
 void HIDPad::DualShock4::SetReport()
 {
-    // TODO: Can this be modified to turn off motion tracking?
     static uint8_t report_buffer[79] = { 
         0x52, 0x11, 0xB0, 0x00, 0x0F
     };
