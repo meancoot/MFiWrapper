@@ -23,12 +23,10 @@
 HIDPad::DualShock4::DualShock4(HIDManager::Connection* aConnection)
     : Interface(aConnection), pauseHeld(true), playerIndex(-1), needSetReport(true)
 {
-#ifdef IOS // Bluetooth Mode
     // 0x43 = GET_REPORT | FEATURE
     // This is needed to get full input packet over bluetooth.
-    uint8_t buf[] = { 0x43, 0x02, 0x25, 0x00 };
-    HIDManager::SendPacket(connection, buf, sizeof(buf));
-#endif    
+    uint8_t buf[0x25];
+    HIDManager::GetReport(connection, true, 0x2, buf, sizeof(buf));
     
     FinalizeConnection();
 }
@@ -135,5 +133,5 @@ void HIDPad::DualShock4::SetReport()
         report_buffer[11] = rgb[playerIndex][2];
     }
 
-    HIDManager::SendPacket(connection, report_buffer, sizeof(report_buffer));
+    HIDManager::SetReport(connection, false, 0x11, report_buffer, sizeof(report_buffer));
 }

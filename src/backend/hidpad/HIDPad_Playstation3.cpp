@@ -26,9 +26,9 @@ HIDPad::Playstation3::Playstation3(HIDManager::Connection* aConnection)
     : Interface(aConnection), pauseHeld(true), ledByte(0), needSetReport(true)
 {
 #ifdef IOS
-    // Magic packet to start reports
+    // Magic packet to start reports; sent automatically by OSX.
     static uint8_t data[] = {0x53, 0xF4, 0x42, 0x03, 0x00, 0x00};
-    HIDManager::SendPacket(aConnection, data, 6);
+    HIDManager::SetReport(aConnection, true, 0, data, sizeof(data));
 #endif
 
     FinalizeConnection();
@@ -119,5 +119,5 @@ void HIDPad::Playstation3::SetReport()
     report_buffer[11] = ledByte;
     //report_buffer[4] = motors[1] >> 8;
     //report_buffer[6] = motors[0] >> 8;
-    HIDManager::SendPacket(connection, report_buffer, sizeof(report_buffer));
+    HIDManager::SetReport(connection, false, 0x01, report_buffer, sizeof(report_buffer));
 }

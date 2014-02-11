@@ -74,9 +74,17 @@ namespace HIDManager
         CFRelease(g_hid_manager);
     }
     
-    void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize)
-    {    
-        IOHIDDeviceSetReport(aConnection->device, kIOHIDReportTypeOutput, 0x01, aData + 1, aSize - 1);
+    void SetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
+    {
+        IOHIDDeviceSetReport(aConnection->device, aFeature ? kIOHIDReportTypeFeature : kIOHIDReportTypeOutput,
+                             aID, aData + 1, aSize - 1);
+    }
+
+    void GetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
+    {
+        CFIndex size = aSize - 1;
+        IOHIDDeviceGetReport(aConnection->device, aFeature ? kIOHIDReportTypeFeature : kIOHIDReportTypeInput,
+                             aID, aData + 1, &size);
     }
 
     //

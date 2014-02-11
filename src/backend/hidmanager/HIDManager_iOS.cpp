@@ -77,9 +77,18 @@ void ShutDown()
 
 }
 
-void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize)
+void SetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
 {
     bt_send_l2cap(aConnection->channels[0], aData, aSize);
+}
+
+void GetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
+{
+    uint8_t data[4] = { 0, aID };
+    data[0] = 0x40 | (aFeature ? 3 : 2);
+    data[2] = aSize & 0xFF;
+    data[3] = (aSize >> 8) & 0xFF;
+    bt_send_l2cap(aConnection->channels[0], data, sizeof(data));
 }
 
 //

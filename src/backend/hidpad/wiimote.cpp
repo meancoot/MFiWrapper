@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
+#include <unistd.h>
 
 #include "wiimote.h"
 #include "HIDPad.h"
@@ -357,7 +358,7 @@ int wiimote_send(struct wiimote_t* wm, byte report_type, byte* msg, int len)
    printf("\n");
 #endif
 
-   HIDManager::SendPacket(wm->connection, buf, len + 2);
+   HIDManager::SetReport(wm->connection, false, report_type, buf, len + 2);
    return 1;
 }
 

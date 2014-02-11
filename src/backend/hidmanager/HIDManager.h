@@ -39,6 +39,7 @@ namespace HIDManager
     void StartUp();
     void ShutDown();
 
-    void SendPacket(Connection* aConnection, uint8_t* aData, size_t aSize);
+    void SetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize);
+    void GetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize);
 };
 
