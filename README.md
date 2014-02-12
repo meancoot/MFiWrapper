@@ -5,7 +5,7 @@ Currently support Wii Remote/Classic Controller, DualShock 3 and DualShock 4 con
 Wii Remotes and DualShock 4 controllers must be paired with BTstack,
 connections created by making the device discoverable are not supported.
 
-The WIIPair (http://github.com/meancoot/WiiPair) app can be used to make such a pairing. (This is a work in progress, DS4 support isn't ready.)
+The WIIPair (https://github.com/meancoot/WiiPair-iOS) app can be used to make such a pairing. (This is a work in progress, DS4 support isn't ready.)
 
 
 ## iOS
