@@ -103,8 +103,7 @@
 
 - (void)dealloc
 {
-    [_valueChangedHandler release];
-    [_dpad release];    
+    [_valueChangedHandler release];    
     [super dealloc];
 }
 
@@ -144,11 +143,7 @@
 
 - (void)dealloc
 {
-    [_valueChangedHandler release];
-    [_dpad release];
-    [_leftThumbstick release];
-    [_rightThumbstick release];
-    
+    [_valueChangedHandler release];    
     [super dealloc];
 }
 

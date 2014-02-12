@@ -50,7 +50,8 @@ public:
     }
 
     ~Connection()
-    {        
+    {
+        delete hidpad;
         if (handle)
             btpad_queue_hci_disconnect(handle, 0x15);
         Connections.erase(this);

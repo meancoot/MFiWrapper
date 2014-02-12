@@ -43,9 +43,9 @@ namespace HIDManager
     
         ~Connection()
         {
+            delete hidpad;        
             if (device)
                 IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
-            delete hidpad;
         }    
     };
         
