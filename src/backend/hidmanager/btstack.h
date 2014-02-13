@@ -30,3 +30,7 @@ void btpad_queue_hci_switch_role(bd_addr_t bd_addr, uint8_t role);
 void btpad_queue_hci_disconnect(uint16_t handle, uint8_t reason);
 void btpad_queue_hci_remote_name_request(bd_addr_t bd_addr, uint8_t page_scan_repetition_mode, uint8_t reserved, uint16_t clock_offset);
 void btpad_queue_hci_pin_code_request_reply(bd_addr_t bd_addr, bd_addr_t pin);
+
+bool btpad_connect(btstack_packet_handler_t handler);
+void btpad_disconnect();
+

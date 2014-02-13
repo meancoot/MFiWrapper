@@ -10,7 +10,7 @@ mfiwrapper_FILES =  src/common.cpp \
                     \
                     src/backend/backend.cpp \
                     src/backend/hidmanager/HIDManager_iOS.cpp \
-                    src/backend/hidmanager/btstack_queue.cpp \
+                    src/backend/hidmanager/btstack_queue.mm \
                     src/backend/hidpad/HIDPad.cpp \
                     src/backend/hidpad/HIDPad_Playstation3.cpp \
                     src/backend/hidpad/HIDPad_DualShock4.cpp \
@@ -27,6 +27,6 @@ ifdef USE_ICADE
 mfiwrapper_CFLAGS  += -DUSE_ICADE
 endif
 
-mfiwrapper_LDFLAGS = -lBTstack
+mfiwrapper_LDFLAGS = -lBTstack -framework UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk

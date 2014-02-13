@@ -13,6 +13,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <CoreFoundation/CoreFoundation.h>
 #include <stdio.h>
 #include <assert.h>
 #include <set>
@@ -65,17 +66,38 @@ public:
     }
 };
     
+void OnAwake(CFNotificationCenterRef center, void* observer,
+             CFStringRef name, const void *object, CFDictionaryRef userInfo)
+{
+    btpad_connect(BTstackPacketHandler);
+}
+
+void OnSleep(CFNotificationCenterRef center, void* observer,
+             CFStringRef name, const void *object, CFDictionaryRef userInfo)
+{
+    void CloseAllConnections();
+    CloseAllConnections();
+
+    btpad_disconnect();
+}
+
 void StartUp()
 {
-    run_loop_init(RUN_LOOP_COCOA);
-    bt_open();
-    bt_register_packet_handler(BTstackPacketHandler);
-    bt_send_cmd(&btstack_set_power_mode, HCI_POWER_ON);
+    CFNotificationCenterRef nc = CFNotificationCenterGetLocalCenter();
+    CFNotificationCenterAddObserver(nc, 0, OnSleep,
+        CFSTR("UIApplicationWillResignActiveNotification"), 0, 
+        CFNotificationSuspensionBehaviorDeliverImmediately);
+
+    CFNotificationCenterAddObserver(nc, 0, OnAwake,
+        CFSTR("UIApplicationDidBecomeActiveNotification"), 0, 
+        CFNotificationSuspensionBehaviorDeliverImmediately);
+
+    OnAwake(0, 0, 0, 0, 0);
 }
 
 void ShutDown()
 {
-
+    OnSleep(0, 0, 0, 0, 0);
 }
 
 void SetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
@@ -135,27 +157,14 @@ void BTstackPacketHandler(uint8_t packet_type, uint16_t channel, uint8_t *packet
         case BTSTACK_EVENT_STATE:
         {
             log.Verbose("BTstack: HCI State %d\n", packet[2]);
- 
-            switch (packet[2])
-            {                
-                case HCI_STATE_WORKING:
-                    btpad_queue_reset();
-
-                    bt_send_cmd(&l2cap_register_service, PSM_HID_CONTROL, 672);  // TODO: Where did I get 672 for mtu?
-                    bt_send_cmd(&l2cap_register_service, PSM_HID_INTERRUPT, 672);
-       
-                    btpad_queue_run(1);
-                    return;
-          
-                case HCI_STATE_HALTING:
-                    CloseAllConnections();
-                    return;                  
+            
+            if (packet[2] == HCI_STATE_WORKING)
+            {
+                bt_send_cmd(&l2cap_register_service, PSM_HID_CONTROL, 672);  // TODO: Where did I get 672 for mtu?
+                bt_send_cmd(&l2cap_register_service, PSM_HID_INTERRUPT, 672);            
             }
         }
         return;
-
-        case HCI_EVENT_COMMAND_STATUS:      btpad_queue_run(packet[3]); return;
-        case HCI_EVENT_COMMAND_COMPLETE:    btpad_queue_run(packet[2]); return;
 
         case HCI_EVENT_CONNECTION_COMPLETE:
         {
