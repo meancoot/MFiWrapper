@@ -15,6 +15,7 @@ mfiwrapper_FILES =  src/common.cpp \
                     src/backend/hidpad/HIDPad_Playstation3.cpp \
                     src/backend/hidpad/HIDPad_DualShock4.cpp \
                     src/backend/hidpad/HIDPad_WiiMote.cpp \
+                    src/backend/hidpad/HIDPad_WiiUPro.cpp \
                     src/backend/hidpad/wiimote.cpp                    
 
 LOG_LEVEL           =  0

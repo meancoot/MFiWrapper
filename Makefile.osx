@@ -10,6 +10,7 @@ OBJECTS = src/common.o \
           src/backend/hidpad/HIDPad_Playstation3.o \
           src/backend/hidpad/HIDPad_DualShock4.o \
           src/backend/hidpad/HIDPad_WiiMote.o \
+          src/backend/hidpad/HIDPad_WiiUPro.o \
           src/backend/hidpad/wiimote.o          
 
 LOG_LEVEL       =  0

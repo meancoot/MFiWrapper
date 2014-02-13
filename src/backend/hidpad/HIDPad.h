@@ -112,5 +112,27 @@ namespace HIDPad
             wiimote_t device;
     };
 
+    class WiiUPro : public Interface
+    {
+        public:
+            WiiUPro(HIDManager::Connection* aConnection);
+            virtual void SetPlayerIndex(int32_t aIndex);
+            virtual void HandlePacket(uint8_t *aData, uint16_t aSize);
+
+            virtual const char* GetVendorName() const;
+            virtual uint32_t GetPresentControls() const;
+            virtual uint32_t GetAnalogControls() const;
+            
+        private:
+            void SetReport();
+            
+            bool pauseHeld;
+            uint8_t playerIndex;
+            bool needSetReport;
+
+            int32_t calibration[4][4]; // LX, LY, RX, RY
+            bool calibrationInitialized;
+    };
+
     Interface* Connect(const char* aName, HIDManager::Connection* aConnection);
 }

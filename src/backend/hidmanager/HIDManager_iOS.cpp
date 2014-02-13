@@ -102,7 +102,11 @@ void ShutDown()
 
 void SetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
 {
-    bt_send_l2cap(aConnection->channels[0], aData, aSize);
+    // TODO: If the high nibble is 0xA we send data over the interrupt channel
+    if ((aData[0] & 0xA0) == 0xA0)
+        bt_send_l2cap(aConnection->channels[1], aData, aSize);
+    else
+        bt_send_l2cap(aConnection->channels[0], aData, aSize);
 }
 
 void GetReport(Connection* aConnection, bool aFeature, uint8_t aID, uint8_t* aData, uint16_t aSize)
@@ -165,6 +169,17 @@ void BTstackPacketHandler(uint8_t packet_type, uint16_t channel, uint8_t *packet
             }
         }
         return;
+
+#if 0 // This is needed to accept connections to WiiU Pro Controllers.
+      // Unfortunately BTdaemon calls this automatically with role set to 1.
+        case HCI_EVENT_CONNECTION_REQUEST:
+        {
+            bd_addr_t address;
+            bt_flip_addr(address, &packet[2]);
+            bt_send_cmd(&hci_accept_connection_request, address, 0);            
+        }
+        return;
+#endif
 
         case HCI_EVENT_CONNECTION_COMPLETE:
         {
