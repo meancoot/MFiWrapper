@@ -75,6 +75,11 @@ void btpad_queue_run(uint32_t count)
    btpad_queue_process();
 }
 
+bool btpad_queue_is_empty()
+{
+    return insert_position == read_position;
+}
+
 void btpad_queue_process()
 {
    for (; can_run && (insert_position != read_position); can_run --)
@@ -163,6 +168,7 @@ void btpad_queue_hci_pin_code_request_reply(bd_addr_t bd_addr, bd_addr_t pin)
 static UIBackgroundTaskIdentifier btstackTaskID = UIBackgroundTaskInvalid;
 static bool btstackInitialized;
 static bool btstackOpened;
+static bool btstackClosing;
 static btstack_packet_handler_t btstackHandler;
 static unsigned hciState;
 
@@ -175,7 +181,7 @@ void btpad_queue_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet,
 
     if (packet_type != HCI_EVENT_PACKET)
     {
-        return;
+        goto done;
     }
 
     // HCI_EVENT_PACKET
@@ -189,23 +195,25 @@ void btpad_queue_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet,
             {
                 btstackHandler(packet_type, channel, packet, size);
             } 
-            else if (packet[2] == HCI_STATE_HALTING && btstackOpened)
-            {
-                bt_close();
-                
-                if (btstackTaskID != UIBackgroundTaskInvalid)
-                {
-                    [[UIApplication sharedApplication] endBackgroundTask:btstackTaskID];
-                    btstackTaskID = UIBackgroundTaskInvalid;                    
-                }
-                
-                btstackOpened = false;                
-            }
         }
-        return;
+        break;
 
-        case HCI_EVENT_COMMAND_STATUS:      btpad_queue_run(packet[3]); return;
-        case HCI_EVENT_COMMAND_COMPLETE:    btpad_queue_run(packet[2]); return;
+        case HCI_EVENT_COMMAND_STATUS:      btpad_queue_run(packet[3]); break;
+        case HCI_EVENT_COMMAND_COMPLETE:    btpad_queue_run(packet[2]); break;
+    }
+
+done:
+    if (btstackClosing && btpad_queue_is_empty())
+    {
+        bt_close();
+        btstackClosing = false;
+        btstackOpened = false;
+        
+        if (btstackTaskID != UIBackgroundTaskInvalid)
+        {
+            [[UIApplication sharedApplication] endBackgroundTask:btstackTaskID];
+            btstackTaskID = UIBackgroundTaskInvalid;                    
+        }        
     }
 }
 
@@ -239,15 +247,15 @@ bool btpad_connect(btstack_packet_handler_t handler)
 
 void btpad_disconnect()
 {
-    // We want to keep running until BTstack has halted.
+    // We want to keep running until all devices are disconnected.
     if (btstackOpened)
     {
+        btstackClosing = true;
+
         btstackTaskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             [[UIApplication sharedApplication] endBackgroundTask:btstackTaskID];
             btstackTaskID = UIBackgroundTaskInvalid;
         }];
-
-        btpad_queue_btstack_set_power_mode(HCI_POWER_OFF);
     }
 }
 
