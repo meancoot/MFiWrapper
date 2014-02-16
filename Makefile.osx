@@ -5,7 +5,7 @@ OBJECTS = src/common.o \
           src/frontend/MFiWrapper.o \
           \
           src/backend/backend.o \
-          src/backend/hidmanager/HIDManager_OSX.o \
+          src/backend/hidmanager/HIDManager.o \
           src/backend/hidpad/HIDPad.o \
           src/backend/hidpad/HIDPad_Playstation3.o \
           src/backend/hidpad/HIDPad_DualShock4.o \

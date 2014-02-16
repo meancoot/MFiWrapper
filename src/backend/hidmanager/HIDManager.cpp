@@ -114,24 +114,29 @@ namespace HIDManager
 
     static void DeviceReport(void* context, IOReturn result, void *sender, IOHIDReportType type, uint32_t reportID, uint8_t *report, CFIndex reportLength)
     {
-       Connection* connection = (Connection*)context;
-       connection->hidpad->HandlePacket(connection->data, reportLength + 1);
+        Connection* connection = (Connection*)context;
+        connection->hidpad->HandlePacket(connection->data, reportLength + 1);
     }
 
     static void DeviceAttached(void* context, IOReturn result, void* sender, IOHIDDeviceRef device)
-    {
-       Connection* connection = new Connection();
-       connection->device = device;
+    {    
+        Connection* connection = new Connection();
+        connection->device = device;
 
-       IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
-       IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
-       IOHIDDeviceRegisterRemovalCallback(device, DeviceRemoved, connection);
+        IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
+        IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+        IOHIDDeviceRegisterRemovalCallback(device, DeviceRemoved, connection);
 
-       CFStringRef device_name_ref = (CFStringRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
-       char device_name[1024];
-       CFStringGetCString(device_name_ref, device_name, sizeof(device_name), kCFStringEncodingUTF8);
+#ifndef IOS
+        CFStringRef device_name_ref = (CFStringRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
+        char device_name[1024];
+        CFStringGetCString(device_name_ref, device_name, sizeof(device_name), kCFStringEncodingUTF8);
+#else
+        // Just assume Dual Shock 4 for now
+        const char* device_name = "Wireless Controller";
+#endif
 
-       connection->hidpad = HIDPad::Connect(device_name, connection);
-       IOHIDDeviceRegisterInputReportCallback(device, connection->data + 1, sizeof(connection->data) - 1, DeviceReport, connection);
+        connection->hidpad = HIDPad::Connect(device_name, connection);
+        IOHIDDeviceRegisterInputReportCallback(device, connection->data + 1, sizeof(connection->data) - 1, DeviceReport, connection);
     }
 }
