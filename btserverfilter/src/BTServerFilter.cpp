@@ -17,6 +17,8 @@ typedef ssize_t (*WriteFilter)(int aFile, const uint8_t* aBuffer, size_t aSize);
 static ReadFilter ReadFilters[0x100];
 static WriteFilter WriteFilters[0x10000];
 
+static uint8_t localAddress[6];
+
 struct ReadContext
 {
     uint8_t* data;
@@ -118,6 +120,19 @@ void FilterInquiryResultEventGeneral(ReadContext& aContext)
     }
 }
 
+void FilterCommandCompleteEvent(ReadContext& aContext)
+{
+    if (aContext.size < 13 || aContext.context[4] != 0x09 || aContext.context[5] != 0x10)
+    {
+        return;
+    }
+    
+    memcpy(localAddress, &aContext.context[7], 6);
+    
+    // Don't capture any more command completes
+    ReadFilters[0x0E] = 0;
+}
+
 #if 0
 ssize_t FilterAcceptConnectionRequestCommand(int aFile, const uint8_t* aBuffer, size_t aSize)
 {
@@ -132,6 +147,8 @@ ssize_t FilterAcceptConnectionRequestCommand(int aFile, const uint8_t* aBuffer, 
     
     return 0;
 }
+#endif
+
 
 ssize_t FilterPINCodeRequestReplyCommand(int aFile, const uint8_t* aBuffer, size_t aSize)
 {
@@ -140,14 +157,13 @@ ssize_t FilterPINCodeRequestReplyCommand(int aFile, const uint8_t* aBuffer, size
         uint8_t newPacket[27];
         memcpy(newPacket, aBuffer, aSize);
         newPacket[10] = 6;
-        /* TODO: Fill in iOS radio address in reverse */
+        memcpy(&newPacket[11], localAddress, 6);
         
         return original_write(aFile, newPacket, 27);
     }
     
     return 0;
 }
-#endif
 
 __attribute__ ((constructor)) static void entry(void)
 {
@@ -155,8 +171,9 @@ __attribute__ ((constructor)) static void entry(void)
 
 //    WiiMote not ready yet.
 //    WriteFilters[0x0409] = FilterAcceptConnectionRequestCommand;
-//    WriteFilters[0x040D] = FilterPINCodeRequestReplyCommand;
+    WriteFilters[0x040D] = FilterPINCodeRequestReplyCommand;
 
+    ReadFilters[0x0E] = FilterCommandCompleteEvent;
     ReadFilters[0x22] = FilterInquiryResultEventGeneral;
     ReadFilters[0x2F] = FilterInquiryResultEventGeneral;    
 
