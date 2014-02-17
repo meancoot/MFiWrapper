@@ -1,3 +1,6 @@
+export ARCHS = armv7 armv7s arm64
+export TARGET = iphone:clang:7.0:7.0
+
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = mfiwrapper
@@ -30,3 +33,5 @@ endif
 mfiwrapper_LDFLAGS = -framework UIKit -L. -lIOKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
+SUBPROJECTS += btserverfilter
+include $(THEOS_MAKE_PATH)/aggregate.mk

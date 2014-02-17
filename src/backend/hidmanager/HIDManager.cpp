@@ -17,7 +17,7 @@
 #include <assert.h>
 #include <set>
 
-#include <CoreFoundation/CFRunLoop.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDManager.h>
 #include "HIDManager.h"
 #include "HIDPad.h"
@@ -132,8 +132,20 @@ namespace HIDManager
         char device_name[1024];
         CFStringGetCString(device_name_ref, device_name, sizeof(device_name), kCFStringEncodingUTF8);
 #else
-        // Just assume Dual Shock 4 for now
-        const char* device_name = "Wireless Controller";
+        const char* device_name = 0;
+
+        int vID = 0;
+        CFNumberRef vendorID = (CFNumberRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDVendorIDKey));
+        CFNumberGetValue(vendorID, kCFNumberIntType, &vID);        
+        
+        int pID = 0;
+        CFNumberRef productID = (CFNumberRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductIDKey));
+        CFNumberGetValue(productID, kCFNumberIntType, &pID);
+    
+        if (vID == 0x57E && pID == 0x306)
+            device_name = "Nintendo RVL-CNT-01";
+        else if (vID == 0x54C && pID == 0x5C4)
+            device_name = "Wireless Controller";
 #endif
 
         connection->hidpad = HIDPad::Connect(device_name, connection);
