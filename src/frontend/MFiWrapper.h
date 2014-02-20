@@ -111,6 +111,12 @@ typedef void (^GCExtendedGamepadValueChangedHandler)(GCExtendedGamepad *gamepad,
 @property (assign) GCControllerButtonInput *leftTrigger;
 @property (assign) GCControllerButtonInput *rightTrigger;
 
+// MFiWrapper Extensions: Use respondsToSelector to check for them.
+@property (assign) GCControllerButtonInput *select;
+@property (assign) GCControllerButtonInput *start;
+@property (assign) GCControllerButtonInput *leftStickButton;
+@property (assign) GCControllerButtonInput *rightStickButton;
+
 + (GCExtendedGamepad*)gamepadForController:(GCController*)controller;
 
 @end

@@ -119,6 +119,9 @@ void HIDPad::WiiMote::ProcessButtons()
         data.LeftTrigger    = B(ZL)    ? 1.0f : 0.0f;
         data.RightTrigger   = B(ZR)    ? 1.0f : 0.0f;
         
+        data.Select         = B(MINUS) ? 1.0f : 0.0f;
+        data.Start          = B(PLUS)  ? 1.0f : 0.0f;
+        
              if (B(LEFT))      data.DPadX = -1.0f;
         else if (B(RIGHT))     data.DPadX =  1.0f;
     

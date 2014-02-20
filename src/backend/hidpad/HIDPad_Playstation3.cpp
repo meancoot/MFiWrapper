@@ -59,14 +59,19 @@ void HIDPad::Playstation3::HandlePacket(uint8_t* aData, uint16_t aSize)
     
     #define B(X, Y) (((float)pad->X##_sens.Y) / 255.0f)
     
-    data.A             = B(button, cross);
-    data.B             = B(button, circle);
-    data.X             = B(button, square);
-    data.Y             = B(button, triangle);
-    data.LeftShoulder  = B(shoulder, L1);
-    data.RightShoulder = B(shoulder, R1);
-    data.LeftTrigger   = B(shoulder, L2);
-    data.RightTrigger  = B(shoulder, R2);
+    data.A                  = B(button, cross);
+    data.B                  = B(button, circle);
+    data.X                  = B(button, square);
+    data.Y                  = B(button, triangle);
+    data.LeftShoulder       = B(shoulder, L1);
+    data.RightShoulder      = B(shoulder, R1);
+    data.LeftTrigger        = B(shoulder, L2);
+    data.RightTrigger       = B(shoulder, R2);
+    
+    data.Select             = pad->buttons.select ? 1.0f : 0.0f;
+    data.Start              = pad->buttons.start ? 1.0f : 0.0f;
+    data.LeftStickButton    = pad->buttons.L3 ? 1.0f : 0.0f;
+    data.RightStickButton   = pad->buttons.R3 ? 1.0f : 0.0f;
 
     data.DPadX = (B(dpad, left) > 0) ? -B(dpad, left) : B(dpad, right);
     data.DPadY = (B(dpad, up  ) > 0) ? -B(dpad, up)   : B(dpad, down );
@@ -97,7 +102,7 @@ uint32_t HIDPad::Playstation3::GetPresentControls() const
 
 uint32_t HIDPad::Playstation3::GetAnalogControls() const
 {
-    return MFi_AllElements;
+    return MFi_AllElements & ~MFi_FullElements;
 }
 
 void HIDPad::Playstation3::SetReport()

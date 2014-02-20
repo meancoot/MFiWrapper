@@ -52,19 +52,24 @@ void HIDPad::WiiUPro::HandlePacket(uint8_t* aData, uint16_t aSize)
 
     aData[0x0C] ^= 0xFF;
     aData[0x0D] ^= 0xFF;
+    aData[0x0E] ^= 0xFF;
         
     MFiWInputStatePacket data;
     memset(&data, 0, sizeof(data));
     
-    #define B(X)       ((X) ? 1.0f : 0.0f)
-    data.A             = B(aData[0x0D] & 0x40); // B
-    data.B             = B(aData[0x0D] & 0x10); // A
-    data.X             = B(aData[0x0D] & 0x20); // Y
-    data.Y             = B(aData[0x0D] & 0x08); // X
-    data.LeftShoulder  = B(aData[0x0C] & 0x20); // L
-    data.RightShoulder = B(aData[0x0C] & 0x02); // R
-    data.LeftTrigger   = B(aData[0x0D] & 0x80); // ZL
-    data.RightTrigger  = B(aData[0x0D] & 0x04); // ZR
+    #define B(X)            ((X) ? 1.0f : 0.0f)
+    data.A                  = B(aData[0x0D] & 0x40); // B
+    data.B                  = B(aData[0x0D] & 0x10); // A
+    data.X                  = B(aData[0x0D] & 0x20); // Y
+    data.Y                  = B(aData[0x0D] & 0x08); // X
+    data.LeftShoulder       = B(aData[0x0C] & 0x20); // L
+    data.RightShoulder      = B(aData[0x0C] & 0x02); // R
+    data.LeftTrigger        = B(aData[0x0D] & 0x80); // ZL
+    data.RightTrigger       = B(aData[0x0D] & 0x04); // ZR
+    data.Select             = B(aData[0x0C] & 0x10); // Minus
+    data.Start              = B(aData[0x0C] & 0x04); // Plus
+    data.LeftStickButton    = B(aData[0x0E] & 0x02); // Left Stick
+    data.RightStickButton   = B(aData[0x0E] & 0x01); // Right Stick    
 
     data.DPadX = (aData[0x0D] & 0x02) ? -B(aData[0x0D] & 0x02) : B(aData[0x0C] & 0x80); // Left-Right
     data.DPadY = (aData[0x0D] & 0x01) ? -B(aData[0x0D] & 0x01) : B(aData[0x0C] & 0x40); // Up-Down
@@ -118,7 +123,7 @@ uint32_t HIDPad::WiiUPro::GetPresentControls() const
 
 uint32_t HIDPad::WiiUPro::GetAnalogControls() const
 {
-    return MFi_AllElements;
+    return MFi_LeftThumbstick_Bit | MFi_RightThumbstick_Bit;
 }
 
 void HIDPad::WiiUPro::SetReport()

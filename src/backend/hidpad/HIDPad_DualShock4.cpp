@@ -64,15 +64,19 @@ void HIDPad::DualShock4::HandlePacket(uint8_t* aData, uint16_t aSize)
     MFiWInputStatePacket data;
     memset(&data, 0, sizeof(data));
     
-    #define B(X)       (X) ? 1.0f : 0.0f;
-    data.A             = B(rpt->buttons[0] & 0x20); // Cross
-    data.B             = B(rpt->buttons[0] & 0x40); // Circle
-    data.X             = B(rpt->buttons[0] & 0x10); // Square
-    data.Y             = B(rpt->buttons[0] & 0x80); // Triangle
-    data.LeftShoulder  = B(rpt->buttons[1] & 0x01); // L1
-    data.RightShoulder = B(rpt->buttons[1] & 0x02); // R1
-    data.LeftTrigger   = B(rpt->buttons[1] & 0x04); // L2 (TODO: Use analog)
-    data.RightTrigger  = B(rpt->buttons[1] & 0x08); // R2 (TODO: Use analog)
+    #define B(X)            (X) ? 1.0f : 0.0f;
+    data.A                  = B(rpt->buttons[0] & 0x20); // Cross
+    data.B                  = B(rpt->buttons[0] & 0x40); // Circle
+    data.X                  = B(rpt->buttons[0] & 0x10); // Square
+    data.Y                  = B(rpt->buttons[0] & 0x80); // Triangle
+    data.LeftShoulder       = B(rpt->buttons[1] & 0x01); // L1
+    data.RightShoulder      = B(rpt->buttons[1] & 0x02); // R1
+    data.LeftTrigger        = B(rpt->buttons[1] & 0x04); // L2 (TODO: Use analog)
+    data.RightTrigger       = B(rpt->buttons[1] & 0x08); // R2 (TODO: Use analog)
+    data.Select             = B(rpt->buttons[1] & 0x10); // Share
+    data.Start              = B(rpt->buttons[1] & 0x20); // Options
+    data.LeftStickButton    = B(rpt->buttons[1] & 0x40); // L3
+    data.RightStickButton   = B(rpt->buttons[1] & 0x80); // R3
 
     // DPad
     static const float dpadStates[8][2] =
@@ -113,7 +117,7 @@ uint32_t HIDPad::DualShock4::GetPresentControls() const
 
 uint32_t HIDPad::DualShock4::GetAnalogControls() const
 {
-    return MFi_AllElements;
+    return MFi_LeftThumbstick_Bit | MFi_RightThumbstick_Bit;
 }
 
 void HIDPad::DualShock4::SetReport()

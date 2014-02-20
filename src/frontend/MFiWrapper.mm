@@ -38,6 +38,10 @@
         BUTTON(LeftShoulder), BUTTON(RightShoulder),
         DPAD(LeftThumbstick), DPAD(RightThumbstick),
         BUTTON(LeftTrigger), BUTTON(RightTrigger),
+        
+        // MFiWrapper extensions
+        BUTTON(Select), BUTTON(Start), BUTTON(LeftStickButton),
+        BUTTON(RightStickButton),
         nil
     ];
     
@@ -137,7 +141,13 @@
     tweak.rightShoulder = controller.tweakElements[MFi_RightShoulder];
     tweak.leftTrigger = controller.tweakElements[MFi_LeftTrigger];
     tweak.rightTrigger = controller.tweakElements[MFi_RightTrigger];
-    
+   
+    // MFiWrapper extensions
+    tweak.select = controller.tweakElements[MFi_Select];
+    tweak.start = controller.tweakElements[MFi_Start];
+    tweak.leftStickButton = controller.tweakElements[MFi_LeftStickButton];
+    tweak.rightStickButton = controller.tweakElements[MFi_RightStickButton];
+   
     return [tweak autorelease];
 }
 

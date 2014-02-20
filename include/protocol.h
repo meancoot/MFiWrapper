@@ -27,10 +27,13 @@ typedef enum
     MFi_Y,                  MFi_LeftShoulder,
     MFi_RightShoulder,      MFi_LeftThumbstick,
     MFi_RightThumbstick,    MFi_LeftTrigger,
-    MFi_RightTrigger,       MFi_LastElement,
+    MFi_RightTrigger,       MFi_Select,
+    MFi_Start,              MFi_LeftStickButton,
+    MFi_RightStickButton,   MFi_LastElement,
     MFi_NormalElements      = 0x7F,
     MFi_ExtendedElements    = 0x780,
-    MFi_AllElements         = 0x7FF
+    MFi_FullElements        = 0x7800,
+    MFi_AllElements         = 0x7FFF,
 }   MFiButtons;
 
 typedef enum
@@ -42,7 +45,9 @@ typedef enum
     DEFBIT(Y),                  DEFBIT(LeftShoulder),
     DEFBIT(RightShoulder),      DEFBIT(LeftThumbstick),
     DEFBIT(RightThumbstick),    DEFBIT(LeftTrigger),
-    DEFBIT(RightTrigger)
+    DEFBIT(RightTrigger),       DEFBIT(Select),
+    DEFBIT(Start),              DEFBIT(LeftStickButton),
+    DEFBIT(RightStickButton)
 }   MFiButtonMask;
 
 #pragma pack(push, 1)
@@ -76,6 +81,13 @@ typedef struct
 
     float LeftTrigger;
     float RightTrigger;
+    
+    // Full Gamepad (Extension)
+    float Select;
+    float Start;
+    float LeftStickButton;
+    float RightStickButton;
+
 }   MFiWInputStatePacket;
 
 typedef struct
