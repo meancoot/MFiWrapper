@@ -45,11 +45,11 @@ void HIDPad::WiiUPro::HandlePacket(uint8_t* aData, uint16_t aSize)
         SetReport();
     needSetReport = false;
 
-    if (aSize != 23 || aData[0] != 0xA1 || aData[1] != 0x34)
+    if (aSize != 23 || aData[1] != 0x34)
     {
         return;
     }
-        
+
     aData[0x0C] ^= 0xFF;
     aData[0x0D] ^= 0xFF;
         

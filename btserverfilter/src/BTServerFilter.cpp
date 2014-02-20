@@ -1,8 +1,12 @@
 #include <stdlib.h>
-#include <vector>
 #include <substrate.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include <vector>
+#include <map>
+#include <string>
+
+#include "BTAddress.h"
 #include "PacketLogger.h"
 static PacketLogger* pktLog;
 
@@ -11,14 +15,29 @@ static PacketLogger* pktLog;
 
 struct ReadContext;
 
-typedef void (*ReadFilter)(ReadContext& aContext);
-typedef ssize_t (*WriteFilter)(int aFile, const uint8_t* aBuffer, size_t aSize);
+// Maps Bluetooth Address to corresponding Device Names.
+// Filled by Remote Name Request Complete events, and checked
+// by PIN Code Request Reply commands to send the proper PIN
+// for Wii Remotes.
+static std::map<BTAddress, std::string> deviceNames;
 
-static ReadFilter ReadFilters[0x100];
-static WriteFilter WriteFilters[0x10000];
-
+// The reversed address of the local Bluetooth radio.
+// Used as the PIN for Wii Remotes.
 static uint8_t localAddress[6];
 
+// List of filters, indexed by HCI event ID.
+// The return value is ignored.
+typedef bool (*ReadFilter)(ReadContext& aContext);
+static ReadFilter ReadFilters[0x100];
+
+// List of filters, indexed by HCI command opcode.
+// The filter is called before the buffer is written to the Bluetooth device.
+// If the filter returns a value greater than zero the data will not written,
+// in which case the filter should call original_write to send it's modified data.
+typedef ssize_t (*WriteFilter)(int aFile, const uint8_t* aBuffer, size_t aSize);
+static WriteFilter WriteFilters[0x10000];
+
+// 
 struct ReadContext
 {
     uint8_t* data;
@@ -65,7 +84,7 @@ HOOKDEF(ssize_t, write, int fildes, const void* buf, size_t nbyte)
 HOOKDEF(ssize_t, read, int fildes, void* buf, size_t nbyte)
 {
     static ReadContext ctx;
-
+    
     ctx.dataLength = original_read(fildes, buf, nbyte);
 
     if (ctx.dataLength < 1)
@@ -108,32 +127,8 @@ HOOKDEF(ssize_t, read, int fildes, void* buf, size_t nbyte)
     return ctx.dataLength;
 }
 
-void FilterInquiryResultEventGeneral(ReadContext& aContext)
-{
-    // We won't patch packets with more than one response
-    if (aContext.size < 0x10 || aContext.context[3] != 1)
-        return;
-
-    if ((aContext.context[13] & 0x1F) == 0x05)   // Peripheral 
-    {
-        aContext.WriteByte(12, 0x40);            // Set to Keyboard            
-    }
-}
-
-void FilterCommandCompleteEvent(ReadContext& aContext)
-{
-    if (aContext.size < 13 || aContext.context[4] != 0x09 || aContext.context[5] != 0x10)
-    {
-        return;
-    }
-    
-    memcpy(localAddress, &aContext.context[7], 6);
-    
-    // Don't capture any more command completes
-    ReadFilters[0x0E] = 0;
-}
-
-#if 0
+// This filter changes the role of the connection request command to master.
+// TODO: Force this only for Wii Remotes.
 ssize_t FilterAcceptConnectionRequestCommand(int aFile, const uint8_t* aBuffer, size_t aSize)
 {
     if (aSize == 11)
@@ -147,13 +142,21 @@ ssize_t FilterAcceptConnectionRequestCommand(int aFile, const uint8_t* aBuffer, 
     
     return 0;
 }
-#endif
 
-
+// If the target Bluetooth Device's name has the text "Nintendo RVL-CNT-01" in
+// it this filter will replace the PIN with the reversed address of the iOS Device's
+// Bluetooth radio.
 ssize_t FilterPINCodeRequestReplyCommand(int aFile, const uint8_t* aBuffer, size_t aSize)
 {
     if (aSize == 27)
     {
+        auto name = deviceNames.find(&aBuffer[4]);
+        
+        if (name == deviceNames.end() || name->second.find("Nintendo RVL-CNT-01", 0) == std::string::npos)
+        {
+            return 0;
+        }
+    
         uint8_t newPacket[27];
         memcpy(newPacket, aBuffer, aSize);
         newPacket[10] = 6;
@@ -165,14 +168,64 @@ ssize_t FilterPINCodeRequestReplyCommand(int aFile, const uint8_t* aBuffer, size
     return 0;
 }
 
+// This functions stores a map of Bluetooth Addresses to Device Names.
+bool FilterRemoteNameRequestCompleteEvent(ReadContext& aContext)
+{
+    if (aContext.size < 255)
+    {
+        return false;
+    }
+    
+    deviceNames[&aContext.context[4]] = (const char*)&aContext.context[10];
+    return false;
+}
+
+// This filter waits for a completed Read Local Address command to complete
+// then copies the address and unmaps itself (to avoid checking every Command
+// Complete event for the local address).
+bool FilterCommandCompleteEvent(ReadContext& aContext)
+{
+    if (aContext.size < 13 || aContext.context[4] != 0x09 || aContext.context[5] != 0x10)
+    {
+        return false;
+    }
+    
+    memcpy(localAddress, &aContext.context[7], 6);
+    
+    // Don't capture any more command completes
+    ReadFilters[0x0E] = 0;
+    return false;    
+}
+
+// This filter patches inquiry result events, but only those which list 
+// a single device. If the major class of device is Peripheral the minor
+// class will be set to keyboard.
+// NOTE: This filter is used for both Inquiry Result with RSSI and Extended
+//       Inquiry Result events.
+bool FilterInquiryResultEventGeneral(ReadContext& aContext)
+{
+    // We won't patch packets with more than one response
+    if (aContext.size < 0x10 || aContext.context[3] != 1)
+    {
+        return false;
+    }
+
+    if ((aContext.context[13] & 0x1F) == 0x05)   // Peripheral 
+    {
+        aContext.WriteByte(12, 0x40);            // Set to Keyboard            
+    }
+
+    return false;    
+}
+
 __attribute__ ((constructor)) static void entry(void)
 {
 //    pktLog = new PacketLogger("/tmp/MFiWrapper.pklg");
 
-//    WiiMote not ready yet.
-//    WriteFilters[0x0409] = FilterAcceptConnectionRequestCommand;
+    WriteFilters[0x0409] = FilterAcceptConnectionRequestCommand;
     WriteFilters[0x040D] = FilterPINCodeRequestReplyCommand;
 
+    ReadFilters[0x07] = FilterRemoteNameRequestCompleteEvent;
     ReadFilters[0x0E] = FilterCommandCompleteEvent;
     ReadFilters[0x22] = FilterInquiryResultEventGeneral;
     ReadFilters[0x2F] = FilterInquiryResultEventGeneral;    

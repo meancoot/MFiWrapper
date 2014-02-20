@@ -141,9 +141,11 @@ namespace HIDManager
         int pID = 0;
         CFNumberRef productID = (CFNumberRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductIDKey));
         CFNumberGetValue(productID, kCFNumberIntType, &pID);
-    
+
         if (vID == 0x57E && pID == 0x306)
             device_name = "Nintendo RVL-CNT-01";
+        else if (vID == 0x57E && pID == 0x330)
+            device_name = "Nintendo RVL-CNT-01-UC";
         else if (vID == 0x54C && pID == 0x5C4)
             device_name = "Wireless Controller";
 #endif
