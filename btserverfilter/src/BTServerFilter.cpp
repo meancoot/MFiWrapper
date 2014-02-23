@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <arpa/inet.h>
 
 #include "BTAddress.h"
 #include "PacketLogger.h"
@@ -14,6 +15,9 @@ static PacketLogger* pktLog;
 #define HOOK(X)             MSHookFunction((void*)&X, (void*)&new_##X, (void**)&original_##X)
 
 struct ReadContext;
+
+// The socket that bluetooth commands are sent over.
+static int bluetoothSocket = -1;
 
 // Maps Bluetooth Address to corresponding Device Names.
 // Filled by Remote Name Request Complete events, and checked
@@ -37,21 +41,21 @@ static ReadFilter ReadFilters[0x100];
 typedef ssize_t (*WriteFilter)(int aFile, const uint8_t* aBuffer, size_t aSize);
 static WriteFilter WriteFilters[0x10000];
 
-// 
+//
 struct ReadContext
 {
     uint8_t* data;
     ssize_t dataLength;
     size_t offset;
-    
+
     uint32_t size;
     std::vector<uint8_t> context;
-    
+
     void WriteByte(uint32_t aOffset, uint8_t aValue)
     {
         if (aOffset > context.size())
             return;
-    
+
         context[aOffset] = aValue;
         if (aOffset < offset + size)
         {
@@ -60,8 +64,25 @@ struct ReadContext
     }
 };
 
+HOOKDEF(int, socket, int domain, int type, int protocol)
+{
+    if (domain == 32)
+    {
+        bluetoothSocket = original_socket(domain, type, protocol);
+        return bluetoothSocket;
+    }
+    else
+        return original_socket(domain, type, protocol);
+}
+
 HOOKDEF(ssize_t, write, int fildes, const void* buf, size_t nbyte)
 {
+    // Only monitor the bluetooth socket
+    if (fildes != bluetoothSocket)
+    {
+        return original_write(fildes, buf, nbyte);
+    }
+
     const uint8_t* bb = (const uint8_t*)buf;
 
     // Packet Logger
@@ -83,8 +104,14 @@ HOOKDEF(ssize_t, write, int fildes, const void* buf, size_t nbyte)
 
 HOOKDEF(ssize_t, read, int fildes, void* buf, size_t nbyte)
 {
+    // Only monitor the bluetooth socket
+    if (fildes != bluetoothSocket)
+    {
+        return original_read(fildes, buf, nbyte);
+    }
+
     static ReadContext ctx;
-    
+
     ctx.dataLength = original_read(fildes, buf, nbyte);
 
     if (ctx.dataLength < 1)
@@ -106,21 +133,21 @@ HOOKDEF(ssize_t, read, int fildes, void* buf, size_t nbyte)
     {
         pktSize = (ctx.context[3] | (ctx.context[4] << 8)) + 5;
     }
-    
+
     // FILTERS
     if (ctx.context[0] == 0x04 && ReadFilters[ctx.context[1]])
     {
         ReadFilters[ctx.context[1]](ctx);
     }
 
-    // Clean up and log    
+    // Clean up and log
     if (ctx.size >= pktSize)
     {
         if (pktLog && pktSize)
         {
             pktLog->LogRead(&ctx.context[0], pktSize);
         }
-        
+
         ctx.context.clear();
     }
 
@@ -136,10 +163,10 @@ ssize_t FilterAcceptConnectionRequestCommand(int aFile, const uint8_t* aBuffer, 
         uint8_t newPacket[11];
         memcpy(newPacket, aBuffer, aSize);
         newPacket[10] = 0;
-    
+
         return original_write(aFile, newPacket, 11);
     }
-    
+
     return 0;
 }
 
@@ -151,20 +178,20 @@ ssize_t FilterPINCodeRequestReplyCommand(int aFile, const uint8_t* aBuffer, size
     if (aSize == 27)
     {
         auto name = deviceNames.find(&aBuffer[4]);
-        
+
         if (name == deviceNames.end() || name->second.find("Nintendo RVL-CNT-01", 0) == std::string::npos)
         {
             return 0;
         }
-    
+
         uint8_t newPacket[27];
         memcpy(newPacket, aBuffer, aSize);
         newPacket[10] = 6;
         memcpy(&newPacket[11], localAddress, 6);
-        
+
         return original_write(aFile, newPacket, 27);
     }
-    
+
     return 0;
 }
 
@@ -175,7 +202,7 @@ bool FilterRemoteNameRequestCompleteEvent(ReadContext& aContext)
     {
         return false;
     }
-    
+
     deviceNames[&aContext.context[4]] = (const char*)&aContext.context[10];
     return false;
 }
@@ -189,15 +216,15 @@ bool FilterCommandCompleteEvent(ReadContext& aContext)
     {
         return false;
     }
-    
+
     memcpy(localAddress, &aContext.context[7], 6);
-    
+
     // Don't capture any more command completes
     ReadFilters[0x0E] = 0;
-    return false;    
+    return false;
 }
 
-// This filter patches inquiry result events, but only those which list 
+// This filter patches inquiry result events, but only those which list
 // a single device. If the major class of device is Peripheral the minor
 // class will be set to keyboard.
 // NOTE: This filter is used for both Inquiry Result with RSSI and Extended
@@ -210,17 +237,17 @@ bool FilterInquiryResultEventGeneral(ReadContext& aContext)
         return false;
     }
 
-    if ((aContext.context[13] & 0x1F) == 0x05)   // Peripheral 
+    if ((aContext.context[13] & 0x1F) == 0x05)   // Peripheral
     {
-        aContext.WriteByte(12, 0x40);            // Set to Keyboard            
+        aContext.WriteByte(12, 0x40);            // Set to Keyboard
     }
 
-    return false;    
+    return false;
 }
 
 __attribute__ ((constructor)) static void entry(void)
 {
-//    pktLog = new PacketLogger("/tmp/MFiWrapper.pklg");
+//    pktLog = new PacketLogger("192.168.0.56", 15631);
 
     WriteFilters[0x0409] = FilterAcceptConnectionRequestCommand;
     WriteFilters[0x040D] = FilterPINCodeRequestReplyCommand;
@@ -228,8 +255,9 @@ __attribute__ ((constructor)) static void entry(void)
     ReadFilters[0x07] = FilterRemoteNameRequestCompleteEvent;
     ReadFilters[0x0E] = FilterCommandCompleteEvent;
     ReadFilters[0x22] = FilterInquiryResultEventGeneral;
-    ReadFilters[0x2F] = FilterInquiryResultEventGeneral;    
+    ReadFilters[0x2F] = FilterInquiryResultEventGeneral;
 
+    HOOK(socket);
     HOOK(write);
     HOOK(read);
 }
