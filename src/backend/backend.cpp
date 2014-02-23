@@ -1,6 +1,6 @@
 /*  MFiWrapper
  *  Copyright (C) 2014 - Jason Fetters
- * 
+ *
  *  MFiWrapper is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
  *  ation, either version 3 of the License, or (at your option) any later version.
@@ -40,12 +40,12 @@ class BackendConnection : public MFiWrapperCommon::Connection
 {
     public:
         BackendConnection(int aDescriptor) : MFiWrapperCommon::Connection(aDescriptor) { };
-        
+
         void HandlePacket(const MFiWDataPacket* aPacket)
         {
             log.Verbose("Received packet (Type: %u, Size: %u, Handle: %u)",
-                        aPacket->Type, aPacket->Size, aPacket->Handle); 
-        
+                        aPacket->Type, aPacket->Size, aPacket->Handle);
+
             switch(aPacket->Type)
             {
                 case MFiWPacketSetPlayerIndex:
@@ -58,13 +58,13 @@ class BackendConnection : public MFiWrapperCommon::Connection
                         device->SetPlayerIndex(aPacket->PlayerIndex.Value);
                     return;
                 }
-                
+
                 default:
                     log.Warning("Unknown packet "
                                 "(Type: %u, Size: %u, Handle: %u)",
                                 aPacket->Type, aPacket->Size, aPacket->Handle);
                     return;
-            }        
+            }
         }
 };
 
@@ -72,18 +72,18 @@ BackendConnection* connection;
 
 static void* ManagerThread(void* aUnused)
 {
-    log.Verbose("Manager thread starting.");
+    log.Notice("Manager thread starting.");
 
     connection = new BackendConnection(sockets[0]);
 
     HIDManager::StartUp();
-    
-    log.Verbose("Manager thread entering run loop.");
+
+    log.Notice("Manager thread entering run loop.");
     CFRunLoopRun();
-    log.Verbose("Manager thread left run loop.");
-    
+    log.Notice("Manager thread left run loop.");
+
     HIDManager::ShutDown();
-    
+
     return 0;
 }
 
@@ -92,19 +92,21 @@ uint32_t AttachController(HIDPad::Interface* aInterface)
     uint32_t handle = nextHandle ++;
     devices[handle] = aInterface;
 
+    log.Notice("Attaching controller (Handle: %u)", handle);
+
     MFiWConnectPacket pkt;
     memset(&pkt, 0, sizeof(pkt));
     strlcpy(pkt.VendorName, aInterface->GetVendorName(), sizeof(pkt.VendorName));
     pkt.PresentControls = aInterface->GetPresentControls();
     pkt.AnalogControls = aInterface->GetAnalogControls();
     connection->SendConnect(handle, &pkt);
-    
+
     return handle;
 }
 
 void DetachController(HIDPad::Interface* aInterface)
 {
-    log.Verbose("Detaching controller (Handle: %u)", aInterface->GetHandle());
+    log.Notice("Detaching controller (Handle: %u)", aInterface->GetHandle());
 
     if (devices.erase(aInterface->GetHandle()))
         connection->SendDisconnect(aInterface->GetHandle());
@@ -133,6 +135,6 @@ int HACKStart()
         socketpair(PF_LOCAL, SOCK_STREAM, 0, sockets);
         pthread_create(&thread, 0, ManagerThread, 0);
     }
-    
+
     return sockets[1];
 }

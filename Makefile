@@ -18,9 +18,9 @@ mfiwrapper_FILES =  src/common.cpp \
                     src/backend/hidpad/HIDPad_DualShock4.cpp \
                     src/backend/hidpad/HIDPad_WiiMote.cpp \
                     src/backend/hidpad/HIDPad_WiiUPro.cpp \
-                    src/backend/hidpad/wiimote.cpp                    
+                    src/backend/hidpad/wiimote.cpp
 
-LOG_LEVEL           =  0
+LOG_LEVEL           =  3
 
 mfiwrapper_CFLAGS  += -DIOS
 mfiwrapper_CCFLAGS += -std=c++11 -Iinclude -Isrc/frontend -Isrc -DLOG_LEVEL=$(LOG_LEVEL)

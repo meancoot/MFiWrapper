@@ -1,6 +1,6 @@
 /*  MFiWrapper
  *  Copyright (C) 2014 - Jason Fetters
- * 
+ *
  *  MFiWrapper is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
  *  ation, either version 3 of the License, or (at your option) any later version.
@@ -29,7 +29,7 @@ struct Logger
         snprintf(buffer, 1024, "(MFiW: %s) %s", header.c_str(), aMessage);
 
         aslmsg msg = asl_new(ASL_TYPE_MSG);
-        asl_set(msg, ASL_KEY_READ_UID, "-1");    
+        asl_set(msg, ASL_KEY_READ_UID, "-1");
         asl_vlog(0, msg, ASL_LEVEL_NOTICE, buffer, ap);
         asl_free(msg);
     }
@@ -41,7 +41,7 @@ struct Logger
         va_start(args, aMessage);
         DoPrint(aMessage, args);
         va_end(args);
-        #endif 
+        #endif
     }
 
     void Warning(const char* aMessage, ...)
@@ -53,7 +53,7 @@ struct Logger
         va_end(args);
         #endif
     }
-    
+
     void Notice(const char* aMessage, ...)
     {
         #if LOG_LEVEL > 2
@@ -61,9 +61,9 @@ struct Logger
         va_start(args, aMessage);
         DoPrint(aMessage, args);
         va_end(args);
-        #endif    
+        #endif
     }
-    
+
     void Verbose(const char* aMessage, ...)
     {
         #if LOG_LEVEL > 3
@@ -71,13 +71,11 @@ struct Logger
         va_start(args, aMessage);
         DoPrint(aMessage, args);
         va_end(args);
-        #endif 
+        #endif
     }
-    
+
 private:
     std::string header;
 };
-
-#undef MFIW_DO_PRINT
 
 }

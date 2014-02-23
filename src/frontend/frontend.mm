@@ -1,6 +1,6 @@
 /*  MFiWrapper
  *  Copyright (C) 2014 - Jason Fetters
- * 
+ *
  *  MFiWrapper is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
  *  ation, either version 3 of the License, or (at your option) any later version.
@@ -32,7 +32,7 @@ GCControllerDiscoveryCompleteHandler discoveryCompletionHandler;
 class FrontendConnection : public MFiWrapperCommon::Connection
 {
 public:
-    FrontendConnection(int aDescriptor) : Connection(aDescriptor) { };    
+    FrontendConnection(int aDescriptor) : Connection(aDescriptor) { };
 
     void HandlePacket(const MFiWDataPacket* aPacket)
     {
@@ -50,7 +50,7 @@ public:
                             "(Type: %u, Size: %u, Handle: %u)",
                             aPacket->Type, aPacket->Size, aPacket->Handle);
                 return;
-        }        
+        }
     }
 };
 
@@ -66,7 +66,7 @@ static int32_t FindControllerByHandle(uint32_t aHandle)
             return i;
         }
     }
-    
+
     return -1;
 }
 
@@ -81,7 +81,7 @@ void Startup()
 #ifndef USE_ICADE
     if (!connection)
     {
-        log.Verbose("Connecting to backend.");
+        log.Notice("Connecting to backend.");
         connection = new FrontendConnection(HACKStart());
     }
 #endif
@@ -96,20 +96,20 @@ NSArray* GetControllers()
 void StartWirelessControllerDiscovery(GCControllerDiscoveryCompleteHandler aHandler)
 {
     Startup();
- 
+
     // This gets copied even if discovery is already running; the replaced
     // handler will never be called in this scenario. (Check GCController.h in
     // GameController.framework for reference).
     [discoveryCompletionHandler release];
-    discoveryCompletionHandler = [aHandler copy]; 
-        
+    discoveryCompletionHandler = [aHandler copy];
+
     log.Notice("Starting wireless controller discovery.");
 }
 
 void StopWirelessControllerDiscovery()
 {
     Startup();
-    
+
     log.Notice("Stopping wireless controller discovery.");
 
 
@@ -136,10 +136,10 @@ void SetControllerIndex(uint32_t aHandle, int32_t aIndex)
 
 void HandlePacketConnect(const MFiWDataPacket* aPacket)
 {
-    log.Verbose("New controller connected (Handle: %u, Vendor: %s "
-                 "Buttons: %04X Analog: %04X",
-                 aPacket->Handle, aPacket->Connect.VendorName,
-                 aPacket->Connect.PresentControls, aPacket->Connect.AnalogControls);
+    log.Notice("New controller connected (Handle: %u, Vendor: %s "
+               "Buttons: %04X Analog: %04X",
+               aPacket->Handle, aPacket->Connect.VendorName,
+               aPacket->Connect.PresentControls, aPacket->Connect.AnalogControls);
 
     GCController* tweak = [GCControllerTweak controllerForHandle:aPacket->Handle data:aPacket->Connect];
     [controllers addObject:tweak];
@@ -149,7 +149,7 @@ void HandlePacketConnect(const MFiWDataPacket* aPacket)
 
 void HandlePacketDisconnect(const MFiWDataPacket* aPacket)
 {
-    log.Verbose("Controller disconnected (Handle: %u)", aPacket->Handle);
+    log.Notice("Controller disconnected (Handle: %u)", aPacket->Handle);
 
     int32_t idx = aPacket->Handle ? FindControllerByHandle(aPacket->Handle) : -1;
     GCController* tweak = (idx >= 0) ? controllers[idx] : nil;

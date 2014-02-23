@@ -1,6 +1,6 @@
 /*  MFiWrapper
  *  Copyright (C) 2014 - Jason Fetters
- * 
+ *
  *  MFiWrapper is free software: you can redistribute it and/or modify it under the terms
  *  of the GNU General Public License as published by the Free Software Found-
  *  ation, either version 3 of the License, or (at your option) any later version.
@@ -26,10 +26,10 @@ HIDPad::DualShock4::DualShock4(HIDManager::Connection* aConnection)
     // This is needed to get full input packet over bluetooth.
     uint8_t buf[0x25];
     HIDManager::GetReport(connection, true, 0x2, buf, sizeof(buf));
-    
+
     FinalizeConnection();
 }
- 
+
 void HIDPad::DualShock4::SetPlayerIndex(int32_t aIndex)
 {
     playerIndex = aIndex;
@@ -58,12 +58,12 @@ void HIDPad::DualShock4::HandlePacket(uint8_t* aData, uint16_t aSize)
         uint8_t leftTrigger;
         uint8_t rightTrigger;
     };
-    
+
     Report* rpt = (Report*)&aData[4];
-        
+
     MFiWInputStatePacket data;
     memset(&data, 0, sizeof(data));
-    
+
     #define B(X)            (X) ? 1.0f : 0.0f;
     data.A                  = B(rpt->buttons[0] & 0x20); // Cross
     data.B                  = B(rpt->buttons[0] & 0x40); // Circle
@@ -81,7 +81,7 @@ void HIDPad::DualShock4::HandlePacket(uint8_t* aData, uint16_t aSize)
     // DPad
     static const float dpadStates[8][2] =
     {
-        {  0, -1 }, {  1, -1 }, {  1,  0 }, {  1,  1 }, 
+        {  0, -1 }, {  1, -1 }, {  1,  0 }, {  1,  1 },
         {  0,  1 }, { -1,  1 }, { -1,  0 }, { -1, -1 }
     };
     const uint8_t dpadState = rpt->buttons[0] & 0xF;
@@ -90,7 +90,7 @@ void HIDPad::DualShock4::HandlePacket(uint8_t* aData, uint16_t aSize)
         data.DPadX = dpadStates[dpadState][0];
         data.DPadY = dpadStates[dpadState][1];
     }
-    
+
     // Axes
     static const int32_t calibration[4] = { 0, 100, 155, 255 };
     data.LeftStickX = CalculateAxis(rpt->leftX, calibration);
@@ -122,12 +122,12 @@ uint32_t HIDPad::DualShock4::GetAnalogControls() const
 
 void HIDPad::DualShock4::SetReport()
 {
-    static uint8_t report_buffer[79] = { 
+    static uint8_t report_buffer[79] = {
         0x52, 0x11, 0xB0, 0x00, 0x0F
     };
 
     uint8_t rgb[4][3] { { 0xFF, 0, 0 }, { 0, 0xFF, 0 }, { 0, 0, 0xFF }, { 0xFF, 0xFF, 0xFF } };
-    
+
     if (playerIndex >= 0 && playerIndex < 4)
     {
         report_buffer[ 9] = rgb[playerIndex][0];
